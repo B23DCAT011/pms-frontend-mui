@@ -1,0 +1,33 @@
+import apiClient from './client.js';
+
+export function listProjects({ search, page } = {}) {
+  return apiClient.get("/projects/", { params: { search, page } });
+}
+
+export function createProject(payload) {
+  return apiClient.post("/projects/", payload);
+}
+
+export function getProject(id) {
+  return apiClient.get(`/projects/${id}/`);
+}
+
+export function updateProject(projectId, payload) {
+  return apiClient.patch(`/projects/${projectId}/`, payload);
+}
+
+export function deleteProject(projectId) {
+  return apiClient.delete(`/projects/${projectId}/`);
+}
+
+export function listProjectMembers(projectId) {
+  return apiClient.get(`/projects/${projectId}/members/`);
+}
+
+export function addProjectMember(projectId, payload) {
+  return apiClient.post(`/projects/${projectId}/members/`, payload);
+}
+
+export function removeProjectMember(projectId, userId) {
+  return apiClient.delete(`/projects/${projectId}/remove-member/`, { data: { user_id: userId } });
+}
