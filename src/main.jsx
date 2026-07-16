@@ -18,7 +18,7 @@ createRoot(document.getElementById('root')).render(
       {/* CssBaseline áp dụng reset CSS + màu nền/chữ theo theme cho toàn trang */}
       <CssBaseline />
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <App />
         </BrowserRouter>
       </AuthProvider>
