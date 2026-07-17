@@ -15,13 +15,21 @@ import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getProject, removeProjectMember } from "../api/projects.js";
 import { listTaskStatuses, deleteTaskStatus } from "../api/taskStatuses.js";
-import { listAllTasks, updateTaskStatus } from "../api/tasks.js";
+import { listTasks, loadMoreTasks, getTaskStats, getStatusTaskCount, updateTaskStatus } from "../api/tasks.js";
 import KanbanColumn from "../components/projects/KanbanColumn.jsx";
 import TaskListView from "../components/projects/TaskListView.jsx";
 import MembersPanel from "../components/projects/MembersPanel.jsx";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import TaskStatusFormDialog from "../components/projects/TaskStatusFormDialog.jsx";
 import AddMemberDialog from "../components/projects/AddMemberDialog.jsx";
+
+// Đếm số task thật của từng status -- tách riêng khỏi việc "đã tải được bao nhiêu"
+// (tasksByStatus chỉ phản ánh phần đã tải qua flat list + Xem thêm, không phải tổng thật).
+function fetchStatusCounts(projectId, statusList) {
+  return Promise.all(statusList.map((s) => getStatusTaskCount(projectId, s.id).then((count) => [s.id, count]))).then(
+    Object.fromEntries,
+  );
+}
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -30,6 +38,13 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [tasks, setTasks] = useState([]);
+  // Giữ lại trang đầu riêng để "Thu gọn" quay về ngay không cần gọi lại API.
+  const [firstPageTasks, setFirstPageTasks] = useState([]);
+  const [firstPageNext, setFirstPageNext] = useState(null);
+  const [tasksNext, setTasksNext] = useState(null);
+  const [loadingMoreTasks, setLoadingMoreTasks] = useState(false);
+  const [taskStats, setTaskStats] = useState({ total: 0, done: 0 });
+  const [statusCounts, setStatusCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dragError, setDragError] = useState(null);
@@ -46,14 +61,21 @@ export default function ProjectDetailPage() {
     let ignore = false;
 
     setLoading(true);
-    Promise.all([getProject(id), listTaskStatuses(id), listAllTasks(id)])
-      .then(([projectData, statusesData, allTasks]) => {
-        if (!ignore) {
-          setProject(projectData);
-          setStatuses(statusesData.results);
-          // task list còn chứa cả subtask (parent != null) như top-level item -> lọc bỏ
-          setTasks(allTasks.filter((t) => t.parent === null));
-        }
+    Promise.all([getProject(id), listTaskStatuses(id), listTasks(id), getTaskStats(id)])
+      .then(async ([projectData, statusesData, taskPage, stats]) => {
+        if (ignore) return;
+        setProject(projectData);
+        setStatuses(statusesData.results);
+        // task list còn chứa cả subtask (parent != null) như top-level item -> lọc bỏ
+        const firstPage = taskPage.results.filter((t) => t.parent === null);
+        setTasks(firstPage);
+        setFirstPageTasks(firstPage);
+        setTasksNext(taskPage.next);
+        setFirstPageNext(taskPage.next);
+        setTaskStats(stats);
+
+        const counts = await fetchStatusCounts(id, statusesData.results);
+        if (!ignore) setStatusCounts(counts);
       })
       .catch((err) => {
         if (!ignore) setError(err.message);
@@ -69,14 +91,48 @@ export default function ProjectDetailPage() {
 
   const sortedStatuses = useMemo(() => [...statuses].sort((a, b) => a.position - b.position), [statuses]);
 
+  // Tạo/sửa/xoá task xong thì load lại từ trang đầu -> nếu đang "xem thêm" dở thì
+  // phần đã tải thêm bị reset về trang đầu, phải bấm "Xem thêm" lại (đánh đổi chấp nhận được).
   const reloadTasks = () => {
-    listAllTasks(id).then((allTasks) => {
-      setTasks(allTasks.filter((t) => t.parent === null));
-    });
+    Promise.all([listTasks(id), getTaskStats(id), fetchStatusCounts(id, statuses)]).then(
+      ([taskPage, stats, counts]) => {
+        const firstPage = taskPage.results.filter((t) => t.parent === null);
+        setTasks(firstPage);
+        setFirstPageTasks(firstPage);
+        setTasksNext(taskPage.next);
+        setFirstPageNext(taskPage.next);
+        setTaskStats(stats);
+        setStatusCounts(counts);
+      },
+    );
+  };
+
+  const handleLoadMoreTasks = () => {
+    if (!tasksNext) return;
+    setLoadingMoreTasks(true);
+    loadMoreTasks(tasksNext)
+      .then((data) => {
+        setTasks((prev) => prev.concat(data.results.filter((t) => t.parent === null)));
+        setTasksNext(data.next);
+      })
+      .finally(() => setLoadingMoreTasks(false));
+  };
+
+  const handleCollapseTasks = () => {
+    setTasks(firstPageTasks);
+    setTasksNext(firstPageNext);
   };
 
   const reloadStatuses = () => {
-    listTaskStatuses(id).then((data) => setStatuses(data.results));
+    listTaskStatuses(id).then((data) => {
+      setStatuses(data.results);
+      // cột vừa tạo chưa có count -> tự đếm (rỗng); cột cũ giữ nguyên, không đụng vào.
+      const missing = data.results.filter((s) => !(s.id in statusCounts));
+      if (missing.length === 0) return;
+      fetchStatusCounts(id, missing).then((counts) => {
+        setStatusCounts((prev) => ({ ...prev, ...counts }));
+      });
+    });
   };
 
   const handleDeleteStatus = (status) => {
@@ -111,8 +167,9 @@ export default function ProjectDetailPage() {
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
-  const doneCount = tasks.filter((t) => t.status.category === "done").length;
-  const progress = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+  // Dùng taskStats (count thật từ backend) chứ không phải tasks.length -- tasks chỉ chứa
+  // phần đã "Xem thêm" tới hiện tại, không phải tổng số task thật của project.
+  const progress = taskStats.total > 0 ? Math.round((taskStats.done / taskStats.total) * 100) : 0;
   const isAdmin = project.members?.some((m) => m.user.id === user.id && m.role === "admin");
 
   const openCreateTask = (statusId) => {
@@ -135,12 +192,31 @@ export default function ProjectDetailPage() {
     const task = tasks.find((t) => t.id === taskId);
     if (!task || !targetStatus || task.status.id === targetStatus.id) return;
 
+    const sourceStatusId = task.status.id;
+    const wasDone = task.status.category === "done";
+    const willBeDone = targetStatus.category === "done";
+
     const previousTasks = tasks;
+    const previousCounts = statusCounts;
+    const previousStats = taskStats;
     setDragError(null);
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: targetStatus } : t)));
+    setStatusCounts((prev) => ({
+      ...prev,
+      [sourceStatusId]: (prev[sourceStatusId] ?? 1) - 1,
+      [targetStatusId]: (prev[targetStatusId] ?? 0) + 1,
+    }));
+    // Progress bar dùng taskStats.done, không tự suy ra từ statusCounts -- phải cập nhật
+    // riêng, chỉ đổi khi chuyển qua lại giữa "done" và "không done" (đổi cột trong cùng
+    // loại category thì tỉ lệ hoàn thành không đổi).
+    if (wasDone !== willBeDone) {
+      setTaskStats((prev) => ({ ...prev, done: prev.done + (willBeDone ? 1 : -1) }));
+    }
 
     updateTaskStatus(taskId, targetStatus.id).catch(() => {
       setTasks(previousTasks);
+      setStatusCounts(previousCounts);
+      setTaskStats(previousStats);
       setDragError("Không đổi được status, thử lại sau.");
     });
   };
@@ -206,7 +282,7 @@ export default function ProjectDetailPage() {
             Tiến độ
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {progress}% hoàn thành ({doneCount}/{tasks.length})
+            {progress}% hoàn thành ({taskStats.done}/{taskStats.total})
           </Typography>
         </Box>
       </Box>
@@ -239,6 +315,7 @@ export default function ProjectDetailPage() {
                     label={status.name}
                     category={status.category}
                     tasks={tasksByStatus[status.id] ?? []}
+                    totalCount={statusCounts[status.id] ?? 0}
                     onDropTask={(taskId) => handleDropTask(status.id, taskId)}
                     canEdit={isAdmin}
                     onAddTask={() => openCreateTask(status.id)}
@@ -265,27 +342,35 @@ export default function ProjectDetailPage() {
           ) : (
             <TaskListView tasks={tasks} />
           )}
+
+          {(tasksNext || tasks.length > firstPageTasks.length) && (
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 2 }}>
+              {tasksNext && (
+                <Button
+                  variant="outlined"
+                  onClick={handleLoadMoreTasks}
+                  disabled={loadingMoreTasks}
+                  sx={{ textTransform: "none" }}
+                >
+                  {loadingMoreTasks ? "Đang tải..." : "Xem thêm task"}
+                </Button>
+              )}
+              {tasks.length > firstPageTasks.length && (
+                <Button variant="outlined" color="inherit" onClick={handleCollapseTasks} sx={{ textTransform: "none" }}>
+                  Thu gọn
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
 
-        <Stack spacing={1}>
-          <MembersPanel
-            members={project.members ?? []}
-            canEdit={isAdmin}
-            currentUserId={user.id}
-            onRemoveMember={handleRemoveMember}
-          />
-          {isAdmin && (
-            <Button
-              fullWidth
-              variant="outlined"
-              size="small"
-              onClick={() => setMemberDialogOpen(true)}
-              sx={{ textTransform: "none" }}
-            >
-              + Thêm thành viên
-            </Button>
-          )}
-        </Stack>
+        <MembersPanel
+          members={project.members ?? []}
+          canEdit={isAdmin}
+          currentUserId={user.id}
+          onRemoveMember={handleRemoveMember}
+          onAddMember={() => setMemberDialogOpen(true)}
+        />
       </Stack>
 
       {/* Tạo task mới — chỉ create, không có task để sửa/xoá */}

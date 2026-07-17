@@ -16,6 +16,7 @@ export default function KanbanColumn({
   label,
   category,
   tasks,
+  totalCount,
   onDropTask,
   canEdit,
   onAddTask,
@@ -46,7 +47,7 @@ export default function KanbanColumn({
             sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: CATEGORY_DOT_COLOR[category] ?? "grey.400" }}
           />
           <Typography variant="subtitle1" fontWeight={600}>
-            {label} ({tasks.length})
+            {label} ({totalCount ?? tasks.length})
           </Typography>
         </Stack>
 

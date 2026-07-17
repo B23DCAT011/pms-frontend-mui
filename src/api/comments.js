@@ -1,19 +1,14 @@
 import apiClient from './client.js';
 
-export function listComments(taskId, page = 1) {
-  return apiClient.get(`/tasks/${taskId}/comments/`, { params: { page } });
+// Trang đầu. Bấm "Xem thêm" thì gọi loadMoreComments(data.next) tiếp — không tự đoán
+// ?page= (backend dùng CursorPagination, không hiểu page number, đoán sai gây vòng
+// lặp vô hạn y hệt tasks.js đã dính trước đó).
+export function listComments(taskId) {
+  return apiClient.get(`/tasks/${taskId}/comments/`);
 }
 
-export async function listAllComments(taskId) {
-  let page = 1;
-  let results = [];
-  while (true) {
-    const data = await listComments(taskId, page);
-    results = results.concat(data.results);
-    if (!data.next) break;
-    page += 1;
-  }
-  return results;
+export function loadMoreComments(nextUrl) {
+  return apiClient.get(nextUrl);
 }
 
 export function createComment(taskId, payload) {

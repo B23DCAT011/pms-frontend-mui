@@ -8,7 +8,13 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import { listAllComments, createComment, updateComment, deleteComment } from "../../api/comments.js";
+import {
+  listComments,
+  loadMoreComments,
+  createComment,
+  updateComment,
+  deleteComment,
+} from "../../api/comments.js";
 import CommentAttachmentSection from "./CommentAttachmentSection.jsx";
 
 function firstError(err) {
@@ -143,31 +149,56 @@ function CommentRow({ taskId, comment, currentUserId, isAdmin, canReply, onReply
 
 export default function CommentSection({ taskId, currentUserId, isAdmin }) {
   const [comments, setComments] = useState([]);
+  // Giữ lại trang đầu riêng để "Thu gọn" quay về ngay không cần gọi lại API.
+  const [firstPageComments, setFirstPageComments] = useState([]);
+  const [firstPageNext, setFirstPageNext] = useState(null);
+  const [commentsNext, setCommentsNext] = useState(null);
+  const [loadingMoreComments, setLoadingMoreComments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newContent, setNewContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const reloadComments = () => {
-    listAllComments(taskId).then((all) => setComments(all.filter((c) => c.parent === null)));
-  };
-
   useEffect(() => {
     setLoading(true);
-    listAllComments(taskId)
-      .then((all) => setComments(all.filter((c) => c.parent === null)))
+    listComments(taskId)
+      .then((data) => {
+        const firstPage = data.results.filter((c) => c.parent === null);
+        setComments(firstPage);
+        setFirstPageComments(firstPage);
+        setCommentsNext(data.next);
+        setFirstPageNext(data.next);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [taskId]);
+
+  const handleLoadMoreComments = () => {
+    if (!commentsNext) return;
+    setLoadingMoreComments(true);
+    loadMoreComments(commentsNext)
+      .then((data) => {
+        setComments((prev) => prev.concat(data.results.filter((c) => c.parent === null)));
+        setCommentsNext(data.next);
+      })
+      .finally(() => setLoadingMoreComments(false));
+  };
+
+  const handleCollapseComments = () => {
+    setComments(firstPageComments);
+    setCommentsNext(firstPageNext);
+  };
 
   const handleAdd = () => {
     if (!newContent.trim()) return;
     setSubmitting(true);
     setError(null);
     createComment(taskId, { content: newContent })
-      .then(() => {
+      .then((created) => {
         setNewContent("");
-        reloadComments();
+        // Comment mới luôn là mới nhất (cursor tăng dần) -> nối thẳng vào cuối, không
+        // refetch trang 1 (sẽ mất nó nếu task đã có hơn 1 trang comment từ trước).
+        setComments((prev) => prev.concat(created));
       })
       .catch((err) => setError(firstError(err)))
       .finally(() => setSubmitting(false));
@@ -177,9 +208,9 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
     if (!content.trim()) return;
     setError(null);
     createComment(taskId, { content, parent: parentId })
-      .then(() => {
+      .then((reply) => {
         onDone();
-        reloadComments();
+        setComments((prev) => prev.map((c) => (c.id === parentId ? { ...c, replies: c.replies.concat(reply) } : c)));
       })
       .catch((err) => setError(firstError(err)));
   };
@@ -188,9 +219,18 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
     if (!content.trim()) return;
     setError(null);
     updateComment(taskId, comment.id, { content })
-      .then(() => {
+      .then((updated) => {
         onDone();
-        reloadComments();
+        // reply lồng trong .replies không có field `parent` riêng (ReplySerializer không trả) ->
+        // comment.parent === null phân biệt đúng: top-level thì null, reply thì undefined.
+        setComments((prev) =>
+          comment.parent === null
+            ? prev.map((c) => (c.id === comment.id ? { ...c, ...updated } : c))
+            : prev.map((c) => ({
+                ...c,
+                replies: c.replies.map((r) => (r.id === comment.id ? { ...r, ...updated } : r)),
+              })),
+        );
       })
       .catch((err) => setError(firstError(err)));
   };
@@ -198,7 +238,15 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
   const handleDelete = (comment) => {
     if (!window.confirm("Xoá bình luận này?")) return;
     setError(null);
-    deleteComment(taskId, comment.id).then(reloadComments).catch((err) => setError(err.message));
+    deleteComment(taskId, comment.id)
+      .then(() => {
+        setComments((prev) =>
+          comment.parent === null
+            ? prev.filter((c) => c.id !== comment.id)
+            : prev.map((c) => ({ ...c, replies: c.replies.filter((r) => r.id !== comment.id) })),
+        );
+      })
+      .catch((err) => setError(err.message));
   };
 
   if (loading) return <CircularProgress size={20} />;
@@ -235,6 +283,26 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
           </Typography>
         )}
       </Stack>
+
+      {(commentsNext || comments.length > firstPageComments.length) && (
+        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+          {commentsNext && (
+            <Button
+              variant="outlined"
+              onClick={handleLoadMoreComments}
+              disabled={loadingMoreComments}
+              sx={{ textTransform: "none" }}
+            >
+              {loadingMoreComments ? "Đang tải..." : "Xem thêm bình luận"}
+            </Button>
+          )}
+          {comments.length > firstPageComments.length && (
+            <Button variant="outlined" color="inherit" onClick={handleCollapseComments} sx={{ textTransform: "none" }}>
+              Thu gọn
+            </Button>
+          )}
+        </Stack>
+      )}
 
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
         <TextField value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Viết bình luận..." multiline fullWidth size="small" />

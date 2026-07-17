@@ -9,6 +9,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage.jsx'
 import TaskDetailPage from './pages/TaskDetailPage.jsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
+import InvitationsPage from './pages/InvitationsPage.jsx'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/projects/:projectId/tasks/:taskId" element={<TaskDetailPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/invitations" element={<InvitationsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
