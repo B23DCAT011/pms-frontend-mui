@@ -11,14 +11,17 @@ import Button from "@mui/material/Button";
 import { listProjects, deleteProject } from "../api/projects.js";
 import ProjectCard from "../components/projects/ProjectCard.jsx";
 import ProjectFormDialog from "../components/projects/ProjectFormDialog.jsx";
+import { useConfirm } from "../confirm/ConfirmContext.jsx";
+import { useNotification } from "../notifications/NotificationContext.jsx";
 
 const PAGE_SIZE = 9;
 
 export default function ProjectsPage() {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [actionError, setActionError] = useState(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -72,13 +75,16 @@ export default function ProjectsPage() {
     setFormDialogOpen(true);
   };
 
-  const handleDeleteProject = (project) => {
-    if (!window.confirm(`Xoá project "${project.name}"?`)) return;
+  const handleDeleteProject = async (project) => {
+    const ok = await confirm(`Xoá project "${project.name}"?`);
+    if (!ok) return;
 
-    setActionError(null);
     deleteProject(project.id)
-      .then(() => setReloadKey((k) => k + 1))
-      .catch((err) => setActionError(err.message));
+      .then(() => {
+        setReloadKey((k) => k + 1);
+        notifySuccess("Đã xoá project.");
+      })
+      .catch((err) => notifyError(err.message));
   };
 
   return (
@@ -112,12 +118,6 @@ export default function ProjectsPage() {
           setReloadKey((k) => k + 1);
         }}
       />
-
-      {actionError && (
-        <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 2 }}>
-          {actionError}
-        </Alert>
-      )}
 
       {error && <Alert severity="error">{error}</Alert>}
 

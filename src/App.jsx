@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
@@ -11,6 +11,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import InvitationsPage from './pages/InvitationsPage.jsx'
 import MyTasksPage from './pages/MyTasksPage.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
 
 function App() {
   return (
@@ -35,7 +36,7 @@ function App() {
         <Route path="/invitations" element={<InvitationsPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

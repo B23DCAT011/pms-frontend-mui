@@ -7,10 +7,11 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import { PRIORITY_LABEL } from "../../constants/taskPriority.js";
 import { createTask, updateTask, deleteTask } from "../../api/tasks.js";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
 function toDatetimeLocalValue(isoString) {
   const d = new Date(isoString);
@@ -19,6 +20,8 @@ function toDatetimeLocalValue(isoString) {
 }
 
 export default function TaskFormDialog({ open, onClose, projectId, statuses, members, defaultStatusId, task, parentId, onSaved }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
@@ -28,7 +31,6 @@ export default function TaskFormDialog({ open, onClose, projectId, statuses, mem
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -49,26 +51,25 @@ export default function TaskFormDialog({ open, onClose, projectId, statuses, mem
       setAssignedTo("");
     }
     setFieldErrors({});
-    setDeleteError(null);
   }, [open, task, defaultStatusId, statuses]);
 
   const handleClose = () => {
     setFieldErrors({});
-    setDeleteError(null);
     onClose();
   };
 
-  const handleDelete = () => {
-    if (!window.confirm(`Xoá task "${task.title}"?`)) return;
+  const handleDelete = async () => {
+    const ok = await confirm(`Xoá task "${task.title}"?`);
+    if (!ok) return;
 
     setDeleting(true);
-    setDeleteError(null);
     deleteTask(task.id)
       .then(() => {
         onSaved();
         handleClose();
+        notifySuccess("Đã xoá task.");
       })
-      .catch((err) => setDeleteError(err.message))
+      .catch((err) => notifyError(err.message))
       .finally(() => setDeleting(false));
   };
 
@@ -99,11 +100,6 @@ export default function TaskFormDialog({ open, onClose, projectId, statuses, mem
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>{task ? "Sửa task" : parentId ? "Tạo subtask mới" : "Tạo task mới"}</DialogTitle>
       <DialogContent>
-        {deleteError && (
-          <Alert severity="error" onClose={() => setDeleteError(null)} sx={{ mb: 2 }}>
-            {deleteError}
-          </Alert>
-        )}
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Tên task"

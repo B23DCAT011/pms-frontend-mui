@@ -8,8 +8,12 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { listAllCommentAttachments, uploadCommentAttachment, deleteCommentAttachment } from "../../api/attachments.js";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
 export default function CommentAttachmentSection({ taskId, commentId, currentUserId, isAdmin, canUpload }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [attachments, setAttachments] = useState([]);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -36,9 +40,15 @@ export default function CommentAttachmentSection({ taskId, commentId, currentUse
       .finally(() => setUploading(false));
   };
 
-  const handleDelete = (attachment) => {
-    if (!window.confirm(`Xoá file "${attachment.file_name}"?`)) return;
-    deleteCommentAttachment(taskId, commentId, attachment.id).then(reload).catch((err) => setError(err.message));
+  const handleDelete = async (attachment) => {
+    const ok = await confirm(`Xoá file "${attachment.file_name}"?`);
+    if (!ok) return;
+    deleteCommentAttachment(taskId, commentId, attachment.id)
+      .then(() => {
+        reload();
+        notifySuccess("Đã xoá file.");
+      })
+      .catch((err) => notifyError(err.message));
   };
 
   if (attachments.length === 0 && !canUpload) return null;

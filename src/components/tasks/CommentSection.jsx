@@ -16,6 +16,8 @@ import {
   deleteComment,
 } from "../../api/comments.js";
 import CommentAttachmentSection from "./CommentAttachmentSection.jsx";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
 function firstError(err) {
   return err.errors?.content?.[0] || err.errors?.parent?.[0] || err.errors?.non_field_errors?.[0] || err.message;
@@ -148,6 +150,8 @@ function CommentRow({ taskId, comment, currentUserId, isAdmin, canReply, onReply
 }
 
 export default function CommentSection({ taskId, currentUserId, isAdmin }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [comments, setComments] = useState([]);
   // Giữ lại trang đầu riêng để "Thu gọn" quay về ngay không cần gọi lại API.
   const [firstPageComments, setFirstPageComments] = useState([]);
@@ -235,9 +239,9 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
       .catch((err) => setError(firstError(err)));
   };
 
-  const handleDelete = (comment) => {
-    if (!window.confirm("Xoá bình luận này?")) return;
-    setError(null);
+  const handleDelete = async (comment) => {
+    const ok = await confirm("Xoá bình luận này?");
+    if (!ok) return;
     deleteComment(taskId, comment.id)
       .then(() => {
         setComments((prev) =>
@@ -245,8 +249,9 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
             ? prev.filter((c) => c.id !== comment.id)
             : prev.map((c) => ({ ...c, replies: c.replies.filter((r) => r.id !== comment.id) })),
         );
+        notifySuccess("Đã xoá bình luận.");
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => notifyError(err.message));
   };
 
   if (loading) return <CircularProgress size={20} />;

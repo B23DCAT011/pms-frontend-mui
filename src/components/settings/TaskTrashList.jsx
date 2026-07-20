@@ -11,8 +11,12 @@ import { alpha } from "@mui/material/styles";
 import { listTaskTrash, loadMoreTasks, restoreTask, hardDeleteTask } from "../../api/tasks.js";
 import { listAllMyProjects } from "../../api/projects.js";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../../constants/taskPriority.js";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
-export default function TaskTrashList() {
+export default function TaskTrashList({ refreshKey }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [projectsById, setProjectsById] = useState({});
   const [tasks, setTasks] = useState([]);
   const [next, setNext] = useState(null);
@@ -39,7 +43,9 @@ export default function TaskTrashList() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(reload, []);
+  // refreshKey đổi khi ProjectTrashList vừa restore/hard-delete xong (báo qua TrashSection)
+  // — Project restore/hard-delete cascade xuống Task con, phải tải lại để đồng bộ.
+  useEffect(reload, [refreshKey]);
 
   const handleLoadMore = () => {
     if (!next) return;
@@ -55,17 +61,24 @@ export default function TaskTrashList() {
   const handleRestore = (task) => {
     setBusyId(task.id);
     restoreTask(task.id)
-      .then(() => setTasks((prev) => prev.filter((t) => t.id !== task.id)))
-      .catch((err) => setError(err.message))
+      .then(() => {
+        setTasks((prev) => prev.filter((t) => t.id !== task.id));
+        notifySuccess(`Đã khôi phục task "${task.title}".`);
+      })
+      .catch((err) => notifyError(err.message))
       .finally(() => setBusyId(null));
   };
 
-  const handleHardDelete = (task) => {
-    if (!window.confirm(`Xoá vĩnh viễn task "${task.title}"? Không thể hoàn tác.`)) return;
+  const handleHardDelete = async (task) => {
+    const ok = await confirm(`Xoá vĩnh viễn task "${task.title}"? Không thể hoàn tác.`);
+    if (!ok) return;
     setBusyId(task.id);
     hardDeleteTask(task.id)
-      .then(() => setTasks((prev) => prev.filter((t) => t.id !== task.id)))
-      .catch((err) => setError(err.message))
+      .then(() => {
+        setTasks((prev) => prev.filter((t) => t.id !== task.id));
+        notifySuccess(`Đã xoá vĩnh viễn task "${task.title}".`);
+      })
+      .catch((err) => notifyError(err.message))
       .finally(() => setBusyId(null));
   };
 

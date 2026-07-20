@@ -16,6 +16,9 @@ export default function ProfileSection() {
 
   const [firstName, setFirstName] = useState(user.first_name || "");
   const [lastName, setLastName] = useState(user.last_name || "");
+  const [dateOfBirth, setDateOfBirth] = useState(user.date_of_birth || "");
+  const [phoneNumber, setPhoneNumber] = useState(user.phone_number || "");
+  const [organization, setOrganization] = useState(user.organization || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -23,14 +26,25 @@ export default function ProfileSection() {
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username;
   const initial = (user.first_name || user.username || "?").charAt(0).toUpperCase();
 
-  const dirty = firstName !== (user.first_name || "") || lastName !== (user.last_name || "");
+  const dirty =
+    firstName !== (user.first_name || "") ||
+    lastName !== (user.last_name || "") ||
+    dateOfBirth !== (user.date_of_birth || "") ||
+    phoneNumber !== (user.phone_number || "") ||
+    organization !== (user.organization || "");
 
   async function handleSave() {
     setSaving(true);
     setError(null);
     setSuccess(false);
     try {
-      const patch = await updateMe({ first_name: firstName, last_name: lastName });
+      const patch = await updateMe({
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth || null,
+        phone_number: phoneNumber,
+        organization,
+      });
       updateUser(patch);
       setSuccess(true);
     } catch (err) {
@@ -79,6 +93,35 @@ export default function ProfileSection() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField label="Tên" value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <TextField
+            label="Ngày sinh"
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            fullWidth
+            size="small"
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <TextField
+            label="Số điện thoại"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            fullWidth
+            size="small"
+          />
+        </Grid>
+        <Grid size={12}>
+          <TextField
+            label="Đơn vị / nơi làm việc"
+            value={organization}
+            onChange={(e) => setOrganization(e.target.value)}
+            fullWidth
+            size="small"
+          />
         </Grid>
       </Grid>
 

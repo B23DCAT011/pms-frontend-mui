@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import ProfileSection from "../components/settings/ProfileSection.jsx";
+import ChangePasswordSection from "../components/settings/ChangePasswordSection.jsx";
 import CommentHistorySection from "../components/settings/CommentHistorySection.jsx";
 import TrashSection from "../components/settings/TrashSection.jsx";
 
@@ -18,13 +19,15 @@ export default function SettingsPage() {
 
       <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
         <Tab label="Hồ sơ" />
+        <Tab label="Quản lý tài khoản" />
         <Tab label="Lịch sử bình luận" />
         <Tab label="Thùng rác" />
       </Tabs>
 
       {tab === 0 && <ProfileSection />}
-      {tab === 1 && <CommentHistorySection />}
-      {tab === 2 && <TrashSection />}
+      {tab === 1 && <ChangePasswordSection />}
+      {tab === 2 && <CommentHistorySection />}
+      {tab === 3 && <TrashSection />}
     </Box>
   );
 }

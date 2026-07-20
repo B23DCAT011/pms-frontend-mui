@@ -8,11 +8,15 @@ import Pagination from "@mui/material/Pagination";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { listProjectTrash, restoreProject, hardDeleteProject } from "../../api/projects.js";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
 // PAGE_SIZE khớp PageNumberPagination mặc định của backend, chỉ dùng để tính pageCount.
 const PAGE_SIZE = 9;
 
-export default function ProjectTrashList() {
+export default function ProjectTrashList({ onChange }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [projects, setProjects] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -39,17 +43,30 @@ export default function ProjectTrashList() {
   const handleRestore = (project) => {
     setBusyId(project.id);
     restoreProject(project.id)
-      .then(reload)
-      .catch((err) => setError(err.message))
+      .then(() => {
+        reload();
+        // Restore cascade xuống Task con (BaseModel.restore() đối xứng với delete tree) —
+        // báo ngược lên TrashSection để TaskTrashList tự tải lại, không thì task vừa được
+        // khôi phục theo vẫn còn hiện trong danh sách "Task đã xoá" cho tới khi F5.
+        onChange?.();
+        notifySuccess(`Đã khôi phục project "${project.name}".`);
+      })
+      .catch((err) => notifyError(err.message))
       .finally(() => setBusyId(null));
   };
 
-  const handleHardDelete = (project) => {
-    if (!window.confirm(`Xoá vĩnh viễn project "${project.name}"? Không thể hoàn tác.`)) return;
+  const handleHardDelete = async (project) => {
+    const ok = await confirm(`Xoá vĩnh viễn project "${project.name}"? Không thể hoàn tác.`);
+    if (!ok) return;
     setBusyId(project.id);
     hardDeleteProject(project.id)
-      .then(reload)
-      .catch((err) => setError(err.message))
+      .then(() => {
+        reload();
+        // Hard-delete project cũng cascade xoá thật Task con (FK Task.project on_delete=CASCADE).
+        onChange?.();
+        notifySuccess(`Đã xoá vĩnh viễn project "${project.name}".`);
+      })
+      .catch((err) => notifyError(err.message))
       .finally(() => setBusyId(null));
   };
 

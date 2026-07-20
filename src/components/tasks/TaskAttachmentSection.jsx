@@ -11,6 +11,8 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { listAllTaskAttachments, uploadTaskAttachment, deleteTaskAttachment } from "../../api/attachments.js";
+import { useConfirm } from "../../confirm/ConfirmContext.jsx";
+import { useNotification } from "../../notifications/NotificationContext.jsx";
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -19,6 +21,8 @@ function formatSize(bytes) {
 }
 
 export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, canUpload }) {
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,9 +54,15 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
       .finally(() => setUploading(false));
   };
 
-  const handleDelete = (attachment) => {
-    if (!window.confirm(`Xoá file "${attachment.file_name}"?`)) return;
-    deleteTaskAttachment(taskId, attachment.id).then(reload).catch((err) => setError(err.message));
+  const handleDelete = async (attachment) => {
+    const ok = await confirm(`Xoá file "${attachment.file_name}"?`);
+    if (!ok) return;
+    deleteTaskAttachment(taskId, attachment.id)
+      .then(() => {
+        reload();
+        notifySuccess("Đã xoá file.");
+      })
+      .catch((err) => notifyError(err.message));
   };
 
   if (loading) return <CircularProgress size={20} />;

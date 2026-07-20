@@ -39,3 +39,7 @@ export function forgotPassword(email) {
 export function resetPassword(email, otp, new_password) {
   return apiClient.post("/auth/reset-password/", { email, otp, new_password })
 }
+
+export function changePassword(old_password, new_password) {
+  return apiClient.post("/auth/change-password/", { old_password, new_password })
+}

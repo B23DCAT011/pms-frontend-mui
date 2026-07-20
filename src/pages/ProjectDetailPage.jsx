@@ -22,6 +22,8 @@ import MembersPanel from "../components/projects/MembersPanel.jsx";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import TaskStatusFormDialog from "../components/projects/TaskStatusFormDialog.jsx";
 import AddMemberDialog from "../components/projects/AddMemberDialog.jsx";
+import { useConfirm } from "../confirm/ConfirmContext.jsx";
+import { useNotification } from "../notifications/NotificationContext.jsx";
 
 // Đếm số task thật của từng status -- tách riêng khỏi việc "đã tải được bao nhiêu"
 // (tasksByStatus chỉ phản ánh phần đã tải qua flat list + Xem thêm, không phải tổng thật).
@@ -35,6 +37,8 @@ export default function ProjectDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const confirm = useConfirm();
+  const { notifySuccess, notifyError } = useNotification();
   const [project, setProject] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -47,15 +51,12 @@ export default function ProjectDetailPage() {
   const [statusCounts, setStatusCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dragError, setDragError] = useState(null);
-  const [statusError, setStatusError] = useState(null);
   const [view, setView] = useState("kanban");
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [defaultStatusId, setDefaultStatusId] = useState(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
-  const [memberError, setMemberError] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -135,25 +136,33 @@ export default function ProjectDetailPage() {
     });
   };
 
-  const handleDeleteStatus = (status) => {
-    if (!window.confirm(`Xoá cột "${status.name}"?`)) return;
+  const handleDeleteStatus = async (status) => {
+    const ok = await confirm(`Xoá cột "${status.name}"?`);
+    if (!ok) return;
 
     deleteTaskStatus(status.id)
-      .then(reloadStatuses)
-      .catch((err) => setStatusError(err.errors?.[0] || err.message));
+      .then(() => {
+        reloadStatuses();
+        notifySuccess("Đã xoá cột.");
+      })
+      .catch((err) => notifyError(err.errors?.[0] || err.message));
   };
 
   const reloadProject = () => {
     getProject(id).then(setProject);
   };
 
-  const handleRemoveMember = (member) => {
+  const handleRemoveMember = async (member) => {
     const name = [member.user.first_name, member.user.last_name].filter(Boolean).join(" ") || member.user.username;
-    if (!window.confirm(`Xoá "${name}" khỏi dự án?`)) return;
+    const ok = await confirm(`Xoá "${name}" khỏi dự án?`);
+    if (!ok) return;
 
     removeProjectMember(id, member.user.id)
-      .then(reloadProject)
-      .catch((err) => setMemberError(err.errors?.user_id?.[0] || err.message));
+      .then(() => {
+        reloadProject();
+        notifySuccess(`Đã xoá "${name}" khỏi dự án.`);
+      })
+      .catch((err) => notifyError(err.errors?.user_id?.[0] || err.message));
   };
 
   const tasksByStatus = useMemo(() => {
@@ -199,7 +208,6 @@ export default function ProjectDetailPage() {
     const previousTasks = tasks;
     const previousCounts = statusCounts;
     const previousStats = taskStats;
-    setDragError(null);
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: targetStatus } : t)));
     setStatusCounts((prev) => ({
       ...prev,
@@ -217,7 +225,7 @@ export default function ProjectDetailPage() {
       setTasks(previousTasks);
       setStatusCounts(previousCounts);
       setTaskStats(previousStats);
-      setDragError("Không đổi được status, thử lại sau.");
+      notifyError("Không đổi được status, thử lại sau.");
     });
   };
 
@@ -286,24 +294,6 @@ export default function ProjectDetailPage() {
           </Typography>
         </Box>
       </Box>
-
-      {dragError && (
-        <Alert severity="error" onClose={() => setDragError(null)} sx={{ mb: 2 }}>
-          {dragError}
-        </Alert>
-      )}
-
-      {statusError && (
-        <Alert severity="error" onClose={() => setStatusError(null)} sx={{ mb: 2 }}>
-          {statusError}
-        </Alert>
-      )}
-
-      {memberError && (
-        <Alert severity="error" onClose={() => setMemberError(null)} sx={{ mb: 2 }}>
-          {memberError}
-        </Alert>
-      )}
 
       <Stack direction="row" spacing={2} alignItems="flex-start">
         <Box sx={{ flex: 1, minWidth: 0 }}>
