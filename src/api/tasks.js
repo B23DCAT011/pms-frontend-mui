@@ -14,6 +14,24 @@ export function loadMoreTasks(nextUrl) {
   return apiClient.get(nextUrl);
 }
 
+// My Tasks: task assign cho 1 user, xuyên suốt mọi project họ tham gia — không truyền
+// `project`, backend tự lọc theo project__memberships__user.
+function listMyTasks(assignedTo, params = {}) {
+  return apiClient.get("/tasks/", { params: { assigned_to: assignedTo, ...params } });
+}
+
+// Trang My Tasks không phân trang kiểu "xem thêm" — lấy hết luôn 1 lần, follow `next`
+// giống listAllMyTasks() bên dưới.
+export async function listAllMyAssignedTasks(assignedTo, params = {}) {
+  let data = await listMyTasks(assignedTo, params);
+  let results = data.results;
+  while (data.next) {
+    data = await loadMoreTasks(data.next);
+    results = results.concat(data.results);
+  }
+  return results;
+}
+
 // Dashboard cần list đầy đủ (vẽ donut/overdue), không có nút "xem thêm" ở đây.
 // Phải follow đúng data.next server trả về (không tự đoán ?page=) vì backend dùng
 // LimitOffsetPagination — ?page= không có tác dụng, đoán sai gây vòng lặp vô hạn.
@@ -58,4 +76,18 @@ export function updateTask(taskId, payload) {
 
 export function deleteTask(taskId) {
   return apiClient.delete(`/tasks/${taskId}/`);
+}
+
+// Trang đầu cho Thùng rác (Settings > Thùng rác). Bấm "Xem thêm" thì gọi loadMoreTasks(next)
+// tiếp, giống listTasks() ở trên.
+export function listTaskTrash() {
+  return apiClient.get("/tasks/trash/");
+}
+
+export function restoreTask(taskId) {
+  return apiClient.post(`/tasks/${taskId}/restore/`);
+}
+
+export function hardDeleteTask(taskId) {
+  return apiClient.delete(`/tasks/${taskId}/hard-delete/`);
 }

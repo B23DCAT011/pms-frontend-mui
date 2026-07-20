@@ -13,8 +13,10 @@ import Divider from '@mui/material/Divider'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
+import { useThemeMode } from '../../theme/ThemeModeContext.jsx'
 import { listMyInvitations } from '../../api/invitations.js'
 import { DRAWER_WIDTH } from './Sidebar.jsx'
 
@@ -22,6 +24,7 @@ const PREVIEW_LIMIT = 5
 
 export default function Topbar() {
   const { user } = useAuth()
+  const { mode, toggleMode } = useThemeMode()
   const navigate = useNavigate()
   const [invitations, setInvitations] = useState([])
   const [anchorEl, setAnchorEl] = useState(null)
@@ -87,9 +90,8 @@ export default function Topbar() {
           <IconButton aria-label="Trợ giúp">
             <HelpOutlineIcon />
           </IconButton>
-          {/* TODO: nối toggle theme sáng/tối (Giai đoạn 3) */}
-          <IconButton aria-label="Đổi giao diện">
-            <DarkModeOutlinedIcon />
+          <IconButton aria-label="Đổi giao diện" onClick={toggleMode}>
+            {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </IconButton>
           <Avatar sx={{ width: 32, height: 32 }}>{name.charAt(0).toUpperCase()}</Avatar>
         </Stack>

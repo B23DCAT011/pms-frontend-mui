@@ -10,10 +10,8 @@ import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import FolderIcon from '@mui/icons-material/Folder'
-import GroupIcon from '@mui/icons-material/Group'
+import TaskAltIcon from '@mui/icons-material/TaskAlt'
 import SettingsIcon from '@mui/icons-material/Settings'
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
-import NotificationsIcon from '@mui/icons-material/Notifications'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import logo from '../../assets/kiai-logo.png'
@@ -23,10 +21,8 @@ export const DRAWER_WIDTH = 240
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: DashboardIcon, end: true },
   { to: '/projects', label: 'Projects', icon: FolderIcon },
-  { to: '/team', label: 'Team', icon: GroupIcon },
+  { to: '/my-tasks', label: 'My Tasks', icon: TaskAltIcon },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
-  { to: '/files', label: 'Files', icon: InsertDriveFileIcon },
-  { to: '/updates', label: 'All Updates', icon: NotificationsIcon },
 ]
 
 export default function Sidebar() {

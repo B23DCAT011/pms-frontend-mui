@@ -10,6 +10,7 @@ import TaskDetailPage from './pages/TaskDetailPage.jsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import InvitationsPage from './pages/InvitationsPage.jsx'
+import MyTasksPage from './pages/MyTasksPage.jsx'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/projects/:projectId/tasks/:taskId" element={<TaskDetailPage />} />
+        <Route path="/my-tasks" element={<MyTasksPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/invitations" element={<InvitationsPage />} />
       </Route>

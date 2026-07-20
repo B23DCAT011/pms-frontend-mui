@@ -22,3 +22,10 @@ export function updateComment(taskId, commentId, payload) {
 export function deleteComment(taskId, commentId) {
   return apiClient.delete(`/tasks/${taskId}/comments/${commentId}/`);
 }
+
+// Lịch sử comment của tôi — endpoint này dùng PageNumberPagination mặc định (page=9,
+// khác CursorPagination của listComments() ở trên), nên phân trang kiểu ?page=N thường,
+// không phải "xem thêm" theo next.
+export function listMyComments(page) {
+  return apiClient.get("/tasks/comments/mine/", { params: { page } });
+}
