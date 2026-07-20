@@ -43,3 +43,11 @@ export function resetPassword(email, otp, new_password) {
 export function changePassword(old_password, new_password) {
   return apiClient.post("/auth/change-password/", { old_password, new_password })
 }
+
+export function requestChangeEmail(new_email) {
+  return apiClient.post("/auth/change-email/", { new_email })
+}
+
+export function verifyChangeEmail(otp) {
+  return apiClient.post("/auth/verify-email-change/", { otp })
+}
