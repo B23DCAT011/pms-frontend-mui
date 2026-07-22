@@ -37,7 +37,7 @@ export default function KanbanColumn({
   return (
     <Paper
       variant="outlined"
-      sx={{ p: 2, bgcolor: "grey.50", height: "100%", maxHeight: 1000, display: "flex", flexDirection: "column" }}
+      sx={{ p: 2, bgcolor: "background.default", height: "100%", maxHeight: 1000, display: "flex", flexDirection: "column" }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
