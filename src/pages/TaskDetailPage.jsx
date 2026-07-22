@@ -21,6 +21,7 @@ import { PRIORITY_COLOR, PRIORITY_LABEL } from "../constants/taskPriority.js";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import CommentSection from "../components/tasks/CommentSection.jsx";
 import TaskAttachmentSection from "../components/tasks/TaskAttachmentSection.jsx";
+import ActivityLogButton from "../components/activity/ActivityLogButton.jsx";
 
 export default function TaskDetailPage() {
   const { projectId, taskId } = useParams();
@@ -238,6 +239,8 @@ export default function TaskDetailPage() {
       <TaskAttachmentSection taskId={taskId} currentUserId={user.id} isAdmin={isAdmin} canUpload={canUpload} />
 
       <CommentSection taskId={taskId} currentUserId={user.id} isAdmin={isAdmin} />
+
+      <ActivityLogButton scope="task" id={taskId} />
 
       {/* Sửa/xoá chính task đang xem — task={task} nên dialog hiện sẵn dữ liệu + nút Xoá */}
       <TaskFormDialog

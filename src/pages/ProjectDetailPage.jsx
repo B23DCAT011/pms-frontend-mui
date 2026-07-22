@@ -19,6 +19,7 @@ import { listTasks, loadMoreTasks, getTaskStats, getStatusTaskCount, updateTaskS
 import KanbanColumn from "../components/projects/KanbanColumn.jsx";
 import TaskListView from "../components/projects/TaskListView.jsx";
 import MembersPanel from "../components/projects/MembersPanel.jsx";
+import ActivityLogButton from "../components/activity/ActivityLogButton.jsx";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import TaskStatusFormDialog from "../components/projects/TaskStatusFormDialog.jsx";
 import AddMemberDialog from "../components/projects/AddMemberDialog.jsx";
@@ -281,7 +282,7 @@ export default function ProjectDetailPage() {
             height: 8,
             borderRadius: 4,
             mb: 0.5,
-            bgcolor: "grey.200",
+            bgcolor: "action.hover",
             "& .MuiLinearProgress-bar": { borderRadius: 4 },
           }}
         />
@@ -362,6 +363,8 @@ export default function ProjectDetailPage() {
           onAddMember={() => setMemberDialogOpen(true)}
         />
       </Stack>
+
+      <ActivityLogButton scope="project" id={id} />
 
       {/* Tạo task mới — chỉ create, không có task để sửa/xoá */}
       <TaskFormDialog
