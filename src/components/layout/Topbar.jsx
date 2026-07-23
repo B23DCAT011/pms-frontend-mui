@@ -17,29 +17,47 @@ import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useThemeMode } from '../../theme/ThemeModeContext.jsx'
-import { listMyInvitations } from '../../api/invitations.js'
+import { listNotifications, markNotificationRead } from '../../api/notifications.js'
+import { notificationLabel, notificationTarget } from '../notifications/notificationDisplay.js'
 import { DRAWER_WIDTH } from './Sidebar.jsx'
 
 const PREVIEW_LIMIT = 5
+const POLL_INTERVAL_MS = 30000
 
 export default function Topbar() {
   const { user } = useAuth()
   const { mode, toggleMode } = useThemeMode()
   const navigate = useNavigate()
-  const [invitations, setInvitations] = useState([])
+  const [notifications, setNotifications] = useState([])
   const [anchorEl, setAnchorEl] = useState(null)
 
   const name = user.first_name || user.username
 
   useEffect(() => {
-    listMyInvitations()
-      .then((data) => setInvitations(data.results))
-      .catch(() => {})
+    const fetchNotifications = () => {
+      listNotifications()
+        .then((data) => setNotifications(data.results))
+        .catch(() => {})
+    }
+    fetchNotifications()
+    const timer = setInterval(fetchNotifications, POLL_INTERVAL_MS)
+    return () => clearInterval(timer)
   }, [])
 
-  const goToInvitations = () => {
+  const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  const handleNotificationClick = (notification) => {
     setAnchorEl(null)
-    navigate('/invitations')
+    markNotificationRead(notification.id).catch(() => {})
+    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)))
+
+    const target = notificationTarget(notification)
+    if (target) navigate(target)
+  }
+
+  const goToAllNotifications = () => {
+    setAnchorEl(null)
+    navigate('/notifications')
   }
 
   return (
@@ -59,27 +77,24 @@ export default function Topbar() {
 
         <Stack direction="row" spacing={1} alignItems="center">
           <IconButton aria-label="Thông báo" onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <Badge badgeContent={invitations.length} color="error">
+            <Badge badgeContent={unreadCount} color="error" max={9}>
               <NotificationsIcon />
             </Badge>
           </IconButton>
           <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
-            {invitations.length === 0 && (
+            {notifications.length === 0 && (
               <MenuItem disabled>
                 <ListItemText primary="Không có thông báo mới" />
               </MenuItem>
             )}
-            {invitations.slice(0, PREVIEW_LIMIT).map((inv) => (
-              <MenuItem key={inv.id} onClick={goToInvitations}>
-                <ListItemText
-                  primary={`Lời mời tham gia "${inv.project_name}"`}
-                  secondary={`Mời bởi ${inv.invited_by_email}`}
-                />
+            {notifications.slice(0, PREVIEW_LIMIT).map((n) => (
+              <MenuItem key={n.id} onClick={() => handleNotificationClick(n)} selected={!n.is_read}>
+                <ListItemText primary={notificationLabel(n)} secondary={new Date(n.created_at).toLocaleString('vi-VN')} />
               </MenuItem>
             ))}
-            {invitations.length > 0 && [
+            {notifications.length > 0 && [
               <Divider key="divider" />,
-              <MenuItem key="see-all" onClick={goToInvitations}>
+              <MenuItem key="see-all" onClick={goToAllNotifications}>
                 <Typography variant="body2" color="primary" sx={{ width: '100%', textAlign: 'center' }}>
                   Xem tất cả
                 </Typography>

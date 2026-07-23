@@ -11,6 +11,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import InvitationsPage from './pages/InvitationsPage.jsx'
 import MyTasksPage from './pages/MyTasksPage.jsx'
+import NotificationsPage from './pages/NotificationsPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
         <Route path="/my-tasks" element={<MyTasksPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/invitations" element={<InvitationsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
