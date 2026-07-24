@@ -9,6 +9,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { alpha } from "@mui/material/styles";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ChecklistIcon from "@mui/icons-material/Checklist";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../../constants/taskPriority.js";
 
 export default function TaskCard({ task, onClick }) {
@@ -45,6 +46,11 @@ export default function TaskCard({ task, onClick }) {
 
         <Box sx={{ display: "flex", flexWrap: "nowrap", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
           <Stack direction="row" spacing={1.5} alignItems="center">
+            {task.submitted_at && (
+              <Tooltip title="Đang chờ duyệt">
+                <PendingActionsIcon sx={{ fontSize: 16 }} color="warning" />
+              </Tooltip>
+            )}
             {task.deadline && (
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <CalendarTodayIcon sx={{ fontSize: 14 }} color="disabled" />

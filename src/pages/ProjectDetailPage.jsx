@@ -8,6 +8,11 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 import LinearProgress from "@mui/material/LinearProgress";
 import ViewKanbanIcon from "@mui/icons-material/ViewKanban";
 import ViewListIcon from "@mui/icons-material/ViewList";
@@ -19,6 +24,7 @@ import { listTasks, loadMoreTasks, getTaskStats, getStatusTaskCount, updateTaskS
 import KanbanColumn from "../components/projects/KanbanColumn.jsx";
 import TaskListView from "../components/projects/TaskListView.jsx";
 import MembersPanel from "../components/projects/MembersPanel.jsx";
+import PendingApprovalsButton from "../components/projects/PendingApprovalsButton.jsx";
 import ActivityLogButton from "../components/activity/ActivityLogButton.jsx";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import TaskStatusFormDialog from "../components/projects/TaskStatusFormDialog.jsx";
@@ -51,6 +57,7 @@ export default function ProjectDetailPage() {
   const [taskStats, setTaskStats] = useState({ total: 0, done: 0 });
   const [statusCounts, setStatusCounts] = useState({});
   const [loading, setLoading] = useState(true);
+  const [tasksLoading, setTasksLoading] = useState(true);
   const [error, setError] = useState(null);
   const [view, setView] = useState("kanban");
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -58,22 +65,27 @@ export default function ProjectDetailPage() {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Project/status/stats: chỉ tải lại khi ĐỔI PROJECT (id) — không phụ thuộc filter,
+  // vì loading ở đây gate cả trang (early return CircularProgress bên dưới), gõ search
+  // mà rơi vào effect này sẽ unmount cả trang, ô TextField bị remount mất focus.
   useEffect(() => {
     let ignore = false;
 
     setLoading(true);
-    Promise.all([getProject(id), listTaskStatuses(id), listTasks(id), getTaskStats(id)])
-      .then(async ([projectData, statusesData, taskPage, stats]) => {
+    Promise.all([getProject(id), listTaskStatuses(id), getTaskStats(id)])
+      .then(async ([projectData, statusesData, stats]) => {
         if (ignore) return;
         setProject(projectData);
         setStatuses(statusesData.results);
-        // task list còn chứa cả subtask (parent != null) như top-level item -> lọc bỏ
-        const firstPage = taskPage.results.filter((t) => t.parent === null);
-        setTasks(firstPage);
-        setFirstPageTasks(firstPage);
-        setTasksNext(taskPage.next);
-        setFirstPageNext(taskPage.next);
         setTaskStats(stats);
 
         const counts = await fetchStatusCounts(id, statusesData.results);
@@ -91,12 +103,44 @@ export default function ProjectDetailPage() {
     };
   }, [id]);
 
+  // Task list: tải lại khi đổi project HOẶC đổi filter — dùng loading riêng
+  // (tasksLoading), KHÔNG đụng `loading` của trang để ô search không bị mất focus.
+  useEffect(() => {
+    let ignore = false;
+
+    setTasksLoading(true);
+    listTasks(id, { search: debouncedSearch || undefined, assigned_to: assignedTo || undefined })
+      .then((taskPage) => {
+        if (ignore) return;
+        // task list còn chứa cả subtask (parent != null) như top-level item -> lọc bỏ
+        const firstPage = taskPage.results.filter((t) => t.parent === null);
+        setTasks(firstPage);
+        setFirstPageTasks(firstPage);
+        setTasksNext(taskPage.next);
+        setFirstPageNext(taskPage.next);
+      })
+      .catch((err) => {
+        if (!ignore) setError(err.message);
+      })
+      .finally(() => {
+        if (!ignore) setTasksLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, debouncedSearch, assignedTo]);
+
   const sortedStatuses = useMemo(() => [...statuses].sort((a, b) => a.position - b.position), [statuses]);
 
   // Tạo/sửa/xoá task xong thì load lại từ trang đầu -> nếu đang "xem thêm" dở thì
   // phần đã tải thêm bị reset về trang đầu, phải bấm "Xem thêm" lại (đánh đổi chấp nhận được).
   const reloadTasks = () => {
-    Promise.all([listTasks(id), getTaskStats(id), fetchStatusCounts(id, statuses)]).then(
+    Promise.all([
+      listTasks(id, { search: debouncedSearch || undefined, assigned_to: assignedTo || undefined }),
+      getTaskStats(id),
+      fetchStatusCounts(id, statuses),
+    ]).then(
       ([taskPage, stats, counts]) => {
         const firstPage = taskPage.results.filter((t) => t.parent === null);
         setTasks(firstPage);
@@ -250,27 +294,30 @@ export default function ProjectDetailPage() {
           <Typography color="text.secondary">{project.description}</Typography>
         </Box>
 
-        <Stack direction="row" spacing={0.5} sx={{ border: 1, borderColor: "divider", borderRadius: "20px", p: 0.5 }}>
-          <Button
-            size="small"
-            variant={view === "kanban" ? "contained" : "text"}
-            color={view === "kanban" ? "primary" : "inherit"}
-            onClick={() => setView("kanban")}
-            startIcon={<ViewKanbanIcon fontSize="small" />}
-            sx={{ borderRadius: "16px", textTransform: "none" }}
-          >
-            Kanban
-          </Button>
-          <Button
-            size="small"
-            variant={view === "list" ? "contained" : "text"}
-            color={view === "list" ? "primary" : "inherit"}
-            onClick={() => setView("list")}
-            startIcon={<ViewListIcon fontSize="small" />}
-            sx={{ borderRadius: "16px", textTransform: "none" }}
-          >
-            List
-          </Button>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {isAdmin && <PendingApprovalsButton projectId={id} onChanged={reloadTasks} />}
+          <Stack direction="row" spacing={0.5} sx={{ border: 1, borderColor: "divider", borderRadius: "20px", p: 0.5 }}>
+            <Button
+              size="small"
+              variant={view === "kanban" ? "contained" : "text"}
+              color={view === "kanban" ? "primary" : "inherit"}
+              onClick={() => setView("kanban")}
+              startIcon={<ViewKanbanIcon fontSize="small" />}
+              sx={{ borderRadius: "16px", textTransform: "none" }}
+            >
+              Kanban
+            </Button>
+            <Button
+              size="small"
+              variant={view === "list" ? "contained" : "text"}
+              color={view === "list" ? "primary" : "inherit"}
+              onClick={() => setView("list")}
+              startIcon={<ViewListIcon fontSize="small" />}
+              sx={{ borderRadius: "16px", textTransform: "none" }}
+            >
+              List
+            </Button>
+          </Stack>
         </Stack>
       </Box>
 
@@ -296,8 +343,30 @@ export default function ProjectDetailPage() {
         </Box>
       </Box>
 
+      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
+        <TextField
+          label="Tìm kiếm task"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          size="small"
+          sx={{ width: 240 }}
+        />
+        <FormControl size="small" sx={{ width: 200 }}>
+          <InputLabel>Người đảm nhận</InputLabel>
+          <Select label="Người đảm nhận" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
+            <MenuItem value="">Tất cả</MenuItem>
+            {(project.members ?? []).map((m) => (
+              <MenuItem key={m.user.id} value={m.user.id}>
+                {[m.user.first_name, m.user.last_name].filter(Boolean).join(" ") || m.user.username}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {tasksLoading && <CircularProgress size={20} />}
+      </Stack>
+
       <Stack direction="row" spacing={2} alignItems="flex-start">
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 0, opacity: tasksLoading ? 0.6 : 1, transition: "opacity 0.15s" }}>
           {view === "kanban" ? (
             <Box sx={{ display: "flex", gap: 2, overflowX: "auto", alignItems: "stretch", pb: 1 }}>
               {sortedStatuses.map((status) => (

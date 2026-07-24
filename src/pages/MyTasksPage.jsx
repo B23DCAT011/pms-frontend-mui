@@ -33,6 +33,7 @@ export default function MyTasksPage() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [projectFilter, setProjectFilter] = useState("");
   const [priority, setPriority] = useState("");
   const [category, setCategory] = useState("");
   const [ordering, setOrdering] = useState("-created_at");
@@ -54,6 +55,7 @@ export default function MyTasksPage() {
     setError(null);
     listAllMyAssignedTasks(user.id, {
       search: debouncedSearch || undefined,
+      project: projectFilter || undefined,
       priority: priority || undefined,
       category: category || undefined,
       ordering,
@@ -70,7 +72,7 @@ export default function MyTasksPage() {
     return () => {
       ignore = true;
     };
-  }, [user.id, debouncedSearch, priority, category, ordering]);
+  }, [user.id, debouncedSearch, projectFilter, priority, category, ordering]);
 
   // Nhóm theo mức khẩn cấp, độc lập với category (done) — task quá hạn nhưng đã xong
   // vẫn hiện trong "Quá hạn" (chip trạng thái tự nói rõ đã xong), tránh việc task "biến
@@ -117,6 +119,17 @@ export default function MyTasksPage() {
           size="small"
           sx={{ width: 260 }}
         />
+        <FormControl size="small" sx={{ width: 200 }}>
+          <InputLabel>Dự án</InputLabel>
+          <Select label="Dự án" value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+            <MenuItem value="">Tất cả</MenuItem>
+            {Object.entries(projectsById).map(([projectId, name]) => (
+              <MenuItem key={projectId} value={projectId}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <FormControl size="small" sx={{ width: 160 }}>
           <InputLabel>Độ ưu tiên</InputLabel>
           <Select label="Độ ưu tiên" value={priority} onChange={(e) => setPriority(e.target.value)}>

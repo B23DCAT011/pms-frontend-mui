@@ -14,9 +14,10 @@ import { alpha } from "@mui/material/styles";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../auth/AuthContext.jsx";
+import { useNotification } from "../notifications/NotificationContext.jsx";
 import { getProject } from "../api/projects.js";
 import { listTaskStatuses } from "../api/taskStatuses.js";
-import { getTask } from "../api/tasks.js";
+import { getTask, submitTask, approveTask, rejectTask } from "../api/tasks.js";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../constants/taskPriority.js";
 import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import CommentSection from "../components/tasks/CommentSection.jsx";
@@ -27,6 +28,7 @@ export default function TaskDetailPage() {
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notifySuccess, notifyError } = useNotification();
   const [task, setTask] = useState(null);
   const [project, setProject] = useState(null);
   const [statuses, setStatuses] = useState([]);
@@ -35,6 +37,7 @@ export default function TaskDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [subtaskDialogOpen, setSubtaskDialogOpen] = useState(false);
   const [ancestors, setAncestors] = useState([]);
+  const [actionBusy, setActionBusy] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -95,6 +98,17 @@ export default function TaskDetailPage() {
 
   const sortedStatuses = useMemo(() => [...statuses].sort((a, b) => a.position - b.position), [statuses]);
 
+  const runAction = (action) => {
+    setActionBusy(true);
+    action()
+      .then((res) => {
+        notifySuccess(res.detail);
+        reloadTask();
+      })
+      .catch((err) => notifyError(err.message))
+      .finally(() => setActionBusy(false));
+  };
+
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
@@ -104,6 +118,10 @@ export default function TaskDetailPage() {
     ? [assignedTo.first_name, assignedTo.last_name].filter(Boolean).join(" ") || assignedTo.username
     : "Chưa có người đảm nhận";
   const canUpload = isAdmin || task.assigned_to?.id === user.id;
+
+  const isAssignee = task.assigned_to?.id === user.id;
+  const canSubmit = isAssignee && !task.submitted_at && task.status.category !== "done";
+  const canReview = isAdmin && !!task.submitted_at;
 
   return (
     <>
@@ -131,13 +149,43 @@ export default function TaskDetailPage() {
         </Typography>
       </Breadcrumbs>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-        <Typography variant="h4">{task.title}</Typography>
-        {isAdmin && (
-          <Button variant="outlined" onClick={() => setEditDialogOpen(true)}>
-            Sửa
-          </Button>
-        )}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, gap: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="h4">{task.title}</Typography>
+          {task.submitted_at && <Chip label="Đang chờ duyệt" color="warning" size="small" />}
+        </Stack>
+        <Stack direction="row" spacing={1} flexShrink={0}>
+          {canSubmit && (
+            <Button variant="contained" disabled={actionBusy} onClick={() => runAction(() => submitTask(taskId))}>
+              Nộp task
+            </Button>
+          )}
+          {canReview && (
+            <>
+              <Button
+                variant="contained"
+                color="success"
+                disabled={actionBusy}
+                onClick={() => runAction(() => approveTask(taskId))}
+              >
+                Duyệt
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                disabled={actionBusy}
+                onClick={() => runAction(() => rejectTask(taskId))}
+              >
+                Từ chối
+              </Button>
+            </>
+          )}
+          {isAdmin && (
+            <Button variant="outlined" onClick={() => setEditDialogOpen(true)}>
+              Sửa
+            </Button>
+          )}
+        </Stack>
       </Box>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>

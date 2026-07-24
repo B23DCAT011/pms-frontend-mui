@@ -5,9 +5,10 @@ export function getTask(taskId) {
 }
 
 // Trang đầu cho Kanban board. Bấm "Xem thêm" thì gọi loadMoreTasks(data.next) tiếp,
-// không tự đoán offset/limit tay — server tự tính đúng trong URL `next`.
-export function listTasks(projectId) {
-  return apiClient.get("/tasks/", { params: { project: projectId } });
+// không tự đoán offset/limit tay — server tự tính đúng trong URL `next` (đã mang sẵn
+// params lọc/search hiện tại, không cần tự ghép lại).
+export function listTasks(projectId, params = {}) {
+  return apiClient.get("/tasks/", { params: { project: projectId, ...params } });
 }
 
 export function loadMoreTasks(nextUrl) {
@@ -90,4 +91,25 @@ export function restoreTask(taskId) {
 
 export function hardDeleteTask(taskId) {
   return apiClient.delete(`/tasks/${taskId}/hard-delete/`);
+}
+
+// Assignee nộp task chờ admin duyệt.
+export function submitTask(taskId) {
+  return apiClient.post(`/tasks/${taskId}/submit/`);
+}
+
+// Admin duyệt — backend tự chuyển status sang "done".
+export function approveTask(taskId) {
+  return apiClient.post(`/tasks/${taskId}/approve/`);
+}
+
+// Admin từ chối — status giữ nguyên, task về lại trạng thái chưa submit.
+export function rejectTask(taskId) {
+  return apiClient.post(`/tasks/${taskId}/reject/`);
+}
+
+// Admin xem list task đang chờ duyệt trong 1 project — tái dùng filter `submitted`
+// (BooleanFilter method-based ở backend, tự đảo thành submitted_at__isnull=False).
+export function listSubmittedTasks(projectId) {
+  return apiClient.get("/tasks/", { params: { project: projectId, submitted: true } });
 }

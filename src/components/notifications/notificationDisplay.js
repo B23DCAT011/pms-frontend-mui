@@ -4,6 +4,9 @@ const VERB_LABELS = {
   assigned: (n) => `Bạn được giao task "${n.object_repr}"`,
   invited: (n) => `Lời mời tham gia dự án "${n.object_repr}"`,
   deadline_due: (n) => `Sắp đến hạn: "${n.object_repr}"`,
+  submitted: (n) => `Task "${n.object_repr}" vừa được nộp, chờ duyệt`,
+  approved: (n) => `Task "${n.object_repr}" đã được duyệt`,
+  rejected: (n) => `Task "${n.object_repr}" bị từ chối, cần làm lại`,
 };
 
 export function notificationLabel(n) {
