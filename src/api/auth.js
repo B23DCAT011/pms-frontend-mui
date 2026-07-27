@@ -32,8 +32,8 @@ export function resendOtp(email) {
   return apiClient.post("/auth/resend-otp/", { email })
 }
 
-export function forgotPassword(email) {
-  return apiClient.post("/auth/forgot-password/", { email })
+export function forgotPassword(email, captchaToken) {
+  return apiClient.post("/auth/forgot-password/", { email, captcha_token: captchaToken })
 }
 
 export function resetPassword(email, otp, new_password) {

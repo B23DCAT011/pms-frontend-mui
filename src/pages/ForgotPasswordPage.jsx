@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
@@ -8,6 +8,7 @@ import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { forgotPassword, resetPassword } from '../api/auth.js'
+import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
 import logo from '../assets/kiai-logo.png'
 
 export default function ForgotPasswordPage() {
@@ -17,6 +18,8 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const captchaRef = useRef(null)
 
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -28,10 +31,12 @@ export default function ForgotPasswordPage() {
     setEmailError('')
     setSubmitting(true)
     try {
-      await forgotPassword(email)
+      await forgotPassword(email, captchaToken)
+      setCaptchaToken('')
       setStep('reset')
     } catch (err) {
-      setEmailError(err.message || 'Gửi yêu cầu thất bại')
+      setEmailError(err.errors?.captcha_token?.[0] || err.message || 'Gửi yêu cầu thất bại')
+      captchaRef.current?.reset()
     } finally {
       setSubmitting(false)
     }
@@ -54,7 +59,7 @@ export default function ForgotPasswordPage() {
   async function handleResend() {
     setResetError('')
     try {
-      await forgotPassword(email)
+      await forgotPassword(email, captchaToken)
       setResendCooldown(60)
       const timer = setInterval(() => {
         setResendCooldown((prev) => {
@@ -66,7 +71,9 @@ export default function ForgotPasswordPage() {
         })
       }, 1000)
     } catch (err) {
-      setResetError(err.message || 'Gửi lại OTP thất bại')
+      setResetError(err.errors?.captcha_token?.[0] || err.message || 'Gửi lại OTP thất bại')
+    } finally {
+      captchaRef.current?.reset()
     }
   }
 
@@ -112,7 +119,8 @@ export default function ForgotPasswordPage() {
             </Button>
           </Box>
 
-          <Button fullWidth sx={{ mt: 1 }} onClick={handleResend} disabled={resendCooldown > 0}>
+          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
+          <Button fullWidth sx={{ mt: 1 }} onClick={handleResend} disabled={resendCooldown > 0 || (turnstileEnabled && !captchaToken)}>
             {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
           </Button>
         </Paper>
@@ -145,7 +153,8 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
+          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting || (turnstileEnabled && !captchaToken)}>
             {submitting ? 'Đang gửi...' : 'Gửi mã OTP'}
           </Button>
         </Box>

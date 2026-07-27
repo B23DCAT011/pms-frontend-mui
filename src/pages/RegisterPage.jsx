@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
@@ -8,6 +8,7 @@ import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { register, verifyOtp, resendOtp } from '../api/auth.js'
+import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
 import logo from '../assets/kiai-logo.png'
 
 export default function RegisterPage() {
@@ -26,6 +27,8 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const captchaRef = useRef(null)
 
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
@@ -41,14 +44,16 @@ export default function RegisterPage() {
     setFieldErrors({})
     setSubmitting(true)
     try {
-      await register(form)
+      await register({ ...form, captcha_token: captchaToken })
       setStep('otp')
     } catch (err) {
       if (err.errors) {
         setFieldErrors(err.errors)
+        if (err.errors.captcha_token) setFormError(err.errors.captcha_token[0])
       } else {
         setFormError(err.message || 'Đăng ký thất bại')
       }
+      captchaRef.current?.reset()
     } finally {
       setSubmitting(false)
     }
@@ -154,7 +159,8 @@ export default function RegisterPage() {
             error={Boolean(fieldErrors.password)} helperText={fieldErrors.password?.[0]} />
           <TextField size="small" label="Nhập lại mật khẩu" type="password" fullWidth margin="normal" value={form.password_confirm} onChange={updateField('password_confirm')}
             error={Boolean(fieldErrors.password_confirm)} helperText={fieldErrors.password_confirm?.[0]} />
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
+          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting || (turnstileEnabled && !captchaToken)}>
             {submitting ? 'Đang đăng ký...' : 'Đăng ký'}
           </Button>
         </Box>
