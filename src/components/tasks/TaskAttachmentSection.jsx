@@ -10,7 +10,14 @@ import Alert from "@mui/material/Alert";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { listAllTaskAttachments, uploadTaskAttachment, deleteTaskAttachment } from "../../api/attachments.js";
+import {
+  listAllTaskAttachments,
+  uploadTaskAttachment,
+  deleteTaskAttachment,
+  listAllTaskAttachmentTrash,
+  restoreTaskAttachment,
+  hardDeleteTaskAttachment,
+} from "../../api/attachments.js";
 import { useConfirm } from "../../confirm/ConfirmContext.jsx";
 import { useNotification } from "../../notifications/NotificationContext.jsx";
 
@@ -29,8 +36,51 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [showTrash, setShowTrash] = useState(false);
+  const [trash, setTrash] = useState([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [busyTrashId, setBusyTrashId] = useState(null);
+
   const reload = () => {
     listAllTaskAttachments(taskId).then(setAttachments);
+  };
+
+  const reloadTrash = () => {
+    setTrashLoading(true);
+    listAllTaskAttachmentTrash(taskId)
+      .then(setTrash)
+      .finally(() => setTrashLoading(false));
+  };
+
+  const handleToggleTrash = () => {
+    const next = !showTrash;
+    setShowTrash(next);
+    if (next) reloadTrash();
+  };
+
+  const handleRestore = (attachment) => {
+    setBusyTrashId(attachment.id);
+    restoreTaskAttachment(taskId, attachment.id)
+      .then(() => {
+        setTrash((prev) => prev.filter((a) => a.id !== attachment.id));
+        reload();
+        notifySuccess(`Đã khôi phục file "${attachment.file_name}".`);
+      })
+      .catch((err) => notifyError(err.message))
+      .finally(() => setBusyTrashId(null));
+  };
+
+  const handleHardDeleteTrash = async (attachment) => {
+    const ok = await confirm(`Xoá vĩnh viễn file "${attachment.file_name}"? Không thể hoàn tác.`);
+    if (!ok) return;
+    setBusyTrashId(attachment.id);
+    hardDeleteTaskAttachment(taskId, attachment.id)
+      .then(() => {
+        setTrash((prev) => prev.filter((a) => a.id !== attachment.id));
+        notifySuccess(`Đã xoá vĩnh viễn file "${attachment.file_name}".`);
+      })
+      .catch((err) => notifyError(err.message))
+      .finally(() => setBusyTrashId(null));
   };
 
   useEffect(() => {
@@ -73,17 +123,22 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
         <Typography variant="subtitle1" fontWeight={600}>
           Tệp đính kèm ({attachments.length})
         </Typography>
-        {canUpload && (
-          <Button
-            size="small"
-            startIcon={<AttachFileIcon />}
-            onClick={() => fileInputRef.current.click()}
-            disabled={uploading}
-            sx={{ textTransform: "none" }}
-          >
-            Tải file lên
+        <Stack direction="row" spacing={1}>
+          <Button size="small" onClick={handleToggleTrash} sx={{ textTransform: "none" }}>
+            {showTrash ? "Ẩn thùng rác" : "Thùng rác"}
           </Button>
-        )}
+          {canUpload && (
+            <Button
+              size="small"
+              startIcon={<AttachFileIcon />}
+              onClick={() => fileInputRef.current.click()}
+              disabled={uploading}
+              sx={{ textTransform: "none" }}
+            >
+              Tải file lên
+            </Button>
+          )}
+        </Stack>
         <input ref={fileInputRef} type="file" hidden onChange={handleFileChange} />
       </Stack>
 
@@ -116,6 +171,51 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
           </Typography>
         )}
       </Stack>
+
+      {showTrash && (
+        <Stack spacing={1} sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
+          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+            Thùng rác
+          </Typography>
+          {trashLoading ? (
+            <CircularProgress size={18} />
+          ) : trash.length === 0 ? (
+            <Typography variant="caption" color="text.secondary">
+              Không có file nào trong thùng rác.
+            </Typography>
+          ) : (
+            trash.map((att) => (
+              <Stack key={att.id} direction="row" alignItems="center" spacing={1}>
+                <InsertDriveFileIcon fontSize="small" color="disabled" />
+                <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap color="text.secondary">
+                  {att.file_name}
+                </Typography>
+                {(att.uploaded_by.id === currentUserId || isAdmin) && (
+                  <>
+                    <Button
+                      size="small"
+                      disabled={busyTrashId === att.id}
+                      onClick={() => handleRestore(att)}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Khôi phục
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      disabled={busyTrashId === att.id}
+                      onClick={() => handleHardDeleteTrash(att)}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Xoá vĩnh viễn
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            ))
+          )}
+        </Stack>
+      )}
     </Paper>
   );
 }

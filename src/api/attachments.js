@@ -26,6 +26,30 @@ export function deleteTaskAttachment(taskId, attachmentId) {
   return apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}/`);
 }
 
+export function listTaskAttachmentTrash(taskId, page = 1) {
+  return apiClient.get(`/tasks/${taskId}/attachments/trash/`, { params: { page } });
+}
+
+export async function listAllTaskAttachmentTrash(taskId) {
+  let page = 1;
+  let results = [];
+  while (true) {
+    const data = await listTaskAttachmentTrash(taskId, page);
+    results = results.concat(data.results);
+    if (!data.next) break;
+    page += 1;
+  }
+  return results;
+}
+
+export function restoreTaskAttachment(taskId, attachmentId) {
+  return apiClient.post(`/tasks/${taskId}/attachments/${attachmentId}/restore/`);
+}
+
+export function hardDeleteTaskAttachment(taskId, attachmentId) {
+  return apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}/hard-delete/`);
+}
+
 export function listCommentAttachments(taskId, commentId, page = 1) {
   return apiClient.get(`/tasks/${taskId}/comments/${commentId}/attachments/`, { params: { page } });
 }
