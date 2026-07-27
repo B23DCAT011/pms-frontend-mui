@@ -23,6 +23,25 @@ export function deleteComment(taskId, commentId) {
   return apiClient.delete(`/tasks/${taskId}/comments/${commentId}/`);
 }
 
+// Trang đầu cho Thùng rác của comment (trong task detail, không phải Settings — trash
+// scope theo task_pk, không có endpoint gộp mọi task). Cùng CursorPagination như
+// listComments() -> follow `next`, không tự đoán cursor.
+export function listCommentTrash(taskId) {
+  return apiClient.get(`/tasks/${taskId}/comments/trash/`);
+}
+
+export function loadMoreCommentTrash(nextUrl) {
+  return apiClient.get(nextUrl);
+}
+
+export function restoreComment(taskId, commentId) {
+  return apiClient.post(`/tasks/${taskId}/comments/${commentId}/restore/`);
+}
+
+export function hardDeleteComment(taskId, commentId) {
+  return apiClient.delete(`/tasks/${taskId}/comments/${commentId}/hard-delete/`);
+}
+
 // Lịch sử comment của tôi — endpoint này dùng PageNumberPagination mặc định (page=9,
 // khác CursorPagination của listComments() ở trên), nên phân trang kiểu ?page=N thường,
 // không phải "xem thêm" theo next.

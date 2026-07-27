@@ -14,6 +14,10 @@ import {
   createComment,
   updateComment,
   deleteComment,
+  listCommentTrash,
+  loadMoreCommentTrash,
+  restoreComment,
+  hardDeleteComment,
 } from "../../api/comments.js";
 import CommentAttachmentSection from "./CommentAttachmentSection.jsx";
 import { useConfirm } from "../../confirm/ConfirmContext.jsx";
@@ -163,6 +167,13 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
   const [newContent, setNewContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [showTrash, setShowTrash] = useState(false);
+  const [trash, setTrash] = useState([]);
+  const [trashNext, setTrashNext] = useState(null);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [trashLoadingMore, setTrashLoadingMore] = useState(false);
+  const [busyTrashId, setBusyTrashId] = useState(null);
+
   useEffect(() => {
     setLoading(true);
     listComments(taskId)
@@ -202,7 +213,11 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
         setNewContent("");
         // Comment mới luôn là mới nhất (cursor tăng dần) -> nối thẳng vào cuối, không
         // refetch trang 1 (sẽ mất nó nếu task đã có hơn 1 trang comment từ trước).
+        // Nối vào cả firstPageComments để "Thu gọn" không làm mất comment vừa tạo
+        // (firstPageComments là baseline khi bấm Thu gọn, phải luôn khớp comments trừ
+        // phần tải thêm qua "Xem thêm").
         setComments((prev) => prev.concat(created));
+        setFirstPageComments((prev) => prev.concat(created));
       })
       .catch((err) => setError(firstError(err)))
       .finally(() => setSubmitting(false));
@@ -215,6 +230,9 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
       .then((reply) => {
         onDone();
         setComments((prev) => prev.map((c) => (c.id === parentId ? { ...c, replies: c.replies.concat(reply) } : c)));
+        setFirstPageComments((prev) =>
+          prev.map((c) => (c.id === parentId ? { ...c, replies: c.replies.concat(reply) } : c)),
+        );
       })
       .catch((err) => setError(firstError(err)));
   };
@@ -227,14 +245,15 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
         onDone();
         // reply lồng trong .replies không có field `parent` riêng (ReplySerializer không trả) ->
         // comment.parent === null phân biệt đúng: top-level thì null, reply thì undefined.
-        setComments((prev) =>
+        const apply = (prev) =>
           comment.parent === null
             ? prev.map((c) => (c.id === comment.id ? { ...c, ...updated } : c))
             : prev.map((c) => ({
                 ...c,
                 replies: c.replies.map((r) => (r.id === comment.id ? { ...r, ...updated } : r)),
-              })),
-        );
+              }));
+        setComments(apply);
+        setFirstPageComments(apply);
       })
       .catch((err) => setError(firstError(err)));
   };
@@ -244,23 +263,80 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
     if (!ok) return;
     deleteComment(taskId, comment.id)
       .then(() => {
-        setComments((prev) =>
+        const apply = (prev) =>
           comment.parent === null
             ? prev.filter((c) => c.id !== comment.id)
-            : prev.map((c) => ({ ...c, replies: c.replies.filter((r) => r.id !== comment.id) })),
-        );
+            : prev.map((c) => ({ ...c, replies: c.replies.filter((r) => r.id !== comment.id) }));
+        setComments(apply);
+        setFirstPageComments(apply);
         notifySuccess("Đã xoá bình luận.");
       })
       .catch((err) => notifyError(err.message));
+  };
+
+  const reloadTrash = () => {
+    setTrashLoading(true);
+    listCommentTrash(taskId)
+      .then((data) => {
+        setTrash(data.results);
+        setTrashNext(data.next);
+      })
+      .finally(() => setTrashLoading(false));
+  };
+
+  const handleToggleTrash = () => {
+    const next = !showTrash;
+    setShowTrash(next);
+    if (next) reloadTrash();
+  };
+
+  const handleLoadMoreTrash = () => {
+    if (!trashNext) return;
+    setTrashLoadingMore(true);
+    loadMoreCommentTrash(trashNext)
+      .then((data) => {
+        setTrash((prev) => prev.concat(data.results));
+        setTrashNext(data.next);
+      })
+      .finally(() => setTrashLoadingMore(false));
+  };
+
+  const handleRestoreComment = (comment) => {
+    setBusyTrashId(comment.id);
+    restoreComment(taskId, comment.id)
+      .then(() => {
+        setTrash((prev) => prev.filter((c) => c.id !== comment.id));
+        notifySuccess("Đã khôi phục bình luận.");
+      })
+      .catch((err) => notifyError(err.message))
+      .finally(() => setBusyTrashId(null));
+  };
+
+  const handleHardDeleteComment = async (comment) => {
+    const ok = await confirm("Xoá vĩnh viễn bình luận này? Không thể hoàn tác.");
+    if (!ok) return;
+    setBusyTrashId(comment.id);
+    hardDeleteComment(taskId, comment.id)
+      .then(() => {
+        setTrash((prev) => prev.filter((c) => c.id !== comment.id));
+        notifySuccess("Đã xoá vĩnh viễn bình luận.");
+      })
+      .catch((err) => notifyError(err.message))
+      .finally(() => setBusyTrashId(null));
   };
 
   if (loading) return <CircularProgress size={20} />;
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
-        Bình luận ({comments.length})
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+        <Typography variant="subtitle1" fontWeight={600}>
+          Bình luận ({comments.length})
+        </Typography>
+        <Button size="small" onClick={handleToggleTrash} sx={{ textTransform: "none" }}>
+          {showTrash ? "Ẩn thùng rác" : "Thùng rác"}
+        </Button>
+      </Stack>
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
@@ -305,6 +381,72 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
             <Button variant="outlined" color="inherit" onClick={handleCollapseComments} sx={{ textTransform: "none" }}>
               Thu gọn
             </Button>
+          )}
+        </Stack>
+      )}
+
+      {showTrash && (
+        <Stack spacing={1.5} sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
+          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+            Thùng rác
+          </Typography>
+          {trashLoading ? (
+            <CircularProgress size={18} />
+          ) : trash.length === 0 ? (
+            <Typography variant="caption" color="text.secondary">
+              Không có bình luận nào trong thùng rác.
+            </Typography>
+          ) : (
+            trash.map((comment) => (
+              <Stack key={comment.id} direction="row" spacing={1.5} alignItems="flex-start">
+                <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                  {authorName(comment.user).charAt(0).toUpperCase()}
+                </Avatar>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Stack direction="row" spacing={1} alignItems="baseline">
+                    <Typography variant="body2" fontWeight={600}>
+                      {authorName(comment.user)}
+                    </Typography>
+                    {comment.parent !== null && (
+                      <Typography variant="caption" color="text.secondary">
+                        (trả lời)
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+                    {comment.content}
+                  </Typography>
+                  {(comment.user.id === currentUserId || isAdmin) && (
+                    <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
+                      <Button
+                        size="small"
+                        disabled={busyTrashId === comment.id}
+                        onClick={() => handleRestoreComment(comment)}
+                        sx={{ textTransform: "none", minWidth: 0, p: 0 }}
+                      >
+                        Khôi phục
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        disabled={busyTrashId === comment.id}
+                        onClick={() => handleHardDeleteComment(comment)}
+                        sx={{ textTransform: "none", minWidth: 0, p: 0 }}
+                      >
+                        Xoá vĩnh viễn
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
+              </Stack>
+            ))
+          )}
+          {trashNext && (
+            <Stack alignItems="center">
+              <Button variant="outlined" onClick={handleLoadMoreTrash} disabled={trashLoadingMore} sx={{ textTransform: "none" }}>
+                {trashLoadingMore ? "Đang tải..." : "Xem thêm"}
+              </Button>
+            </Stack>
           )}
         </Stack>
       )}
