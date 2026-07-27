@@ -14,6 +14,7 @@ import logo from '../assets/kiai-logo.png'
 export default function RegisterPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const invitationId = searchParams.get('invitation_id')
   const [step, setStep] = useState('form') // 'form' | 'otp'
 
   const [form, setForm] = useState({
@@ -64,7 +65,7 @@ export default function RegisterPage() {
     setOtpError('')
     setSubmitting(true)
     try {
-      await verifyOtp(form.email, otp)
+      await verifyOtp(form.email, otp, invitationId)
       navigate('/login')
     } catch (err) {
       setOtpError(err.errors?.non_field_errors?.[0] || err.message || 'Xác thực thất bại')

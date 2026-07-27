@@ -24,8 +24,8 @@ export function register(payload) {
   return apiClient.post("/auth/register/", payload)
 }
 
-export function verifyOtp(email, otp) {
-  return apiClient.post("/auth/verify-otp/", { email, otp })
+export function verifyOtp(email, otp, invitationId) {
+  return apiClient.post("/auth/verify-otp/", { email, otp, invitation_id: invitationId || undefined })
 }
 
 export function resendOtp(email) {
