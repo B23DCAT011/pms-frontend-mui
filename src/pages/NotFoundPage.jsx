@@ -4,8 +4,10 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import logo from "../assets/kiai-logo.png";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 export default function NotFoundPage() {
+  useDocumentTitle("Không tìm thấy trang");
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "background.default" }}>
       <Paper variant="outlined" sx={{ p: 4, width: 360, textAlign: "center" }}>

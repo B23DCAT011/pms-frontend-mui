@@ -8,8 +8,10 @@ import ChangePasswordSection from "../components/settings/ChangePasswordSection.
 import ChangeEmailSection from "../components/settings/ChangeEmailSection.jsx";
 import CommentHistorySection from "../components/settings/CommentHistorySection.jsx";
 import TrashSection from "../components/settings/TrashSection.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 export default function SettingsPage() {
+  useDocumentTitle("Cài đặt");
   const [tab, setTab] = useState(0);
 
   return (

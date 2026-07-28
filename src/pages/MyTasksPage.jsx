@@ -15,6 +15,7 @@ import { listAllMyAssignedTasks } from "../api/tasks.js";
 import { listAllMyProjects } from "../api/projects.js";
 import MyTaskRow from "../components/tasks/MyTaskRow.jsx";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 const GROUPS = [
   { key: "overdue", label: "Quá hạn", color: "error.main" },
@@ -24,6 +25,7 @@ const GROUPS = [
 ];
 
 export default function MyTasksPage() {
+  useDocumentTitle("My Tasks");
   const { user } = useAuth();
   const navigate = useNavigate();
 

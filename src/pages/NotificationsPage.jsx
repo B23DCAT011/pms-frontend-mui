@@ -18,8 +18,10 @@ import {
 } from '../api/notifications.js'
 import { notificationLabel, notificationTarget } from '../components/notifications/notificationDisplay.js'
 import { useNotification } from '../notifications/NotificationContext.jsx'
+import useDocumentTitle from '../hooks/useDocumentTitle.js'
 
 export default function NotificationsPage() {
+  useDocumentTitle('Thông báo')
   const navigate = useNavigate()
   const { notifySuccess, notifyError } = useNotification()
   const [notifications, setNotifications] = useState([])

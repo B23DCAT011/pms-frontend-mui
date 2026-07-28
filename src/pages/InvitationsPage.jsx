@@ -9,8 +9,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { listMyInvitations, acceptInvitation, declineInvitation } from "../api/invitations.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 export default function InvitationsPage() {
+  useDocumentTitle("Lời mời");
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,7 +65,7 @@ export default function InvitationsPage() {
           {invitations.map((inv) => (
             <Paper key={inv.id} variant="outlined" sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <Typography variant="subtitle1" fontWeight={600} noWrap>
                     {inv.project_name}
                   </Typography>
@@ -75,7 +77,7 @@ export default function InvitationsPage() {
                 </Typography>
               </Box>
 
-              <Stack direction="row" spacing={1} flexShrink={0}>
+              <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                 <Button
                   size="small"
                   variant="contained"

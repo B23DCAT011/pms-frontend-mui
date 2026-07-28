@@ -12,8 +12,10 @@ import RecentProjectsList from '../components/dashboard/RecentProjectsList.jsx'
 import StatTiles from '../components/dashboard/StatTiles.jsx'
 import TaskStatusDonut from '../components/dashboard/TaskStatusDonut.jsx'
 import UpcomingTasksList from '../components/dashboard/UpcomingTasksList.jsx'
+import useDocumentTitle from '../hooks/useDocumentTitle.js'
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard')
   const { user } = useAuth()
   const [projects, setProjects] = useState([])
   const [projectCount, setProjectCount] = useState(0)

@@ -23,6 +23,7 @@ import TaskFormDialog from "../components/projects/TaskFormDialog.jsx";
 import CommentSection from "../components/tasks/CommentSection.jsx";
 import TaskAttachmentSection from "../components/tasks/TaskAttachmentSection.jsx";
 import ActivityLogButton from "../components/activity/ActivityLogButton.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 export default function TaskDetailPage() {
   const { projectId, taskId } = useParams();
@@ -30,6 +31,7 @@ export default function TaskDetailPage() {
   const { user } = useAuth();
   const { notifySuccess, notifyError } = useNotification();
   const [task, setTask] = useState(null);
+  useDocumentTitle(task?.title);
   const [project, setProject] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,11 +152,11 @@ export default function TaskDetailPage() {
       </Breadcrumbs>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, gap: 2 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Typography variant="h4">{task.title}</Typography>
           {task.submitted_at && <Chip label="Đang chờ duyệt" color="warning" size="small" />}
         </Stack>
-        <Stack direction="row" spacing={1} flexShrink={0}>
+        <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
           {canSubmit && (
             <Button variant="contained" disabled={actionBusy} onClick={() => runAction(() => submitTask(taskId))}>
               Nộp task
@@ -189,7 +191,7 @@ export default function TaskDetailPage() {
       </Box>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={3} sx={{ flexWrap: "wrap", mb: 2 }}>
           <Box>
             <Typography variant="caption" color="text.secondary">
               Trạng thái
@@ -216,7 +218,7 @@ export default function TaskDetailPage() {
             <Typography variant="caption" color="text.secondary">
               Hạn chót
             </Typography>
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
               <CalendarTodayIcon sx={{ fontSize: 14 }} color="disabled" />
               <Typography variant="body2">
                 {task.deadline ? new Date(task.deadline).toLocaleDateString("vi-VN") : "Không có"}
@@ -245,7 +247,7 @@ export default function TaskDetailPage() {
             Subtasks ({task.subtasks.length})
           </Typography>
           {isAdmin && (
-            <Button size="small" startIcon={<AddIcon />} onClick={() => setSubtaskDialogOpen(true)} sx={{ textTransform: "none" }}>
+            <Button size="small" startIcon={<AddIcon />} onClick={() => setSubtaskDialogOpen(true)}>
               Thêm subtask
             </Button>
           )}
@@ -260,7 +262,7 @@ export default function TaskDetailPage() {
               onClick={() => navigate(`/projects/${projectId}/tasks/${subtask.id}`)}
             >
               <Typography variant="body2">{subtask.title}</Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 <Typography variant="caption" color="text.secondary">
                   {subtask.status.name}
                 </Typography>

@@ -20,10 +20,12 @@ import PageHeader from "../components/layout/PageHeader.jsx";
 import EmptyState from "../components/layout/EmptyState.jsx";
 import { useConfirm } from "../confirm/ConfirmContext.jsx";
 import { useNotification } from "../notifications/NotificationContext.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 const PAGE_SIZE = 9;
 
 export default function ProjectsPage() {
+  useDocumentTitle("Projects");
   const confirm = useConfirm();
   const { notifySuccess, notifyError } = useNotification();
   const [projects, setProjects] = useState([]);

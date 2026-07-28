@@ -31,6 +31,7 @@ import TaskStatusFormDialog from "../components/projects/TaskStatusFormDialog.js
 import AddMemberDialog from "../components/projects/AddMemberDialog.jsx";
 import { useConfirm } from "../confirm/ConfirmContext.jsx";
 import { useNotification } from "../notifications/NotificationContext.jsx";
+import useDocumentTitle from "../hooks/useDocumentTitle.js";
 
 // Đếm số task thật của từng status -- tách riêng khỏi việc "đã tải được bao nhiêu"
 // (tasksByStatus chỉ phản ánh phần đã tải qua flat list + Xem thêm, không phải tổng thật).
@@ -47,6 +48,7 @@ export default function ProjectDetailPage() {
   const confirm = useConfirm();
   const { notifySuccess, notifyError } = useNotification();
   const [project, setProject] = useState(null);
+  useDocumentTitle(project?.name);
   const [statuses, setStatuses] = useState([]);
   const [tasks, setTasks] = useState([]);
   // Giữ lại trang đầu riêng để "Thu gọn" quay về ngay không cần gọi lại API.
@@ -296,7 +298,7 @@ export default function ProjectDetailPage() {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
           {isAdmin && <PendingApprovalsButton projectId={id} onChanged={reloadTasks} />}
           <Stack direction="row" spacing={0.5} sx={{ border: 1, borderColor: "divider", borderRadius: "20px", p: 0.5 }}>
             <Button
@@ -305,7 +307,7 @@ export default function ProjectDetailPage() {
               color={view === "kanban" ? "primary" : "inherit"}
               onClick={() => setView("kanban")}
               startIcon={<ViewKanbanIcon fontSize="small" />}
-              sx={{ borderRadius: "16px", textTransform: "none" }}
+              sx={{ borderRadius: "16px" }}
             >
               Kanban
             </Button>
@@ -315,7 +317,7 @@ export default function ProjectDetailPage() {
               color={view === "list" ? "primary" : "inherit"}
               onClick={() => setView("list")}
               startIcon={<ViewListIcon fontSize="small" />}
-              sx={{ borderRadius: "16px", textTransform: "none" }}
+              sx={{ borderRadius: "16px" }}
             >
               List
             </Button>
@@ -345,7 +347,7 @@ export default function ProjectDetailPage() {
         </Box>
       </Box>
 
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", mb: 2 }}>
         <TextField
           label="Tìm kiếm task"
           value={search}
@@ -367,7 +369,7 @@ export default function ProjectDetailPage() {
         {tasksLoading && <CircularProgress size={20} />}
       </Stack>
 
-      <Stack direction="row" spacing={2} alignItems="flex-start">
+      <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
         <Box sx={{ flex: 1, minWidth: 0, opacity: tasksLoading ? 0.6 : 1, transition: "opacity 0.15s" }}>
           {view === "kanban" ? (
             <Box sx={{ display: "flex", gap: 2, overflowX: "auto", alignItems: "stretch", pb: 1 }}>
@@ -395,7 +397,7 @@ export default function ProjectDetailPage() {
                   variant="outlined"
                   startIcon={<AddIcon />}
                   onClick={openCreateStatus}
-                  sx={{ borderStyle: "dashed", textTransform: "none", py: 1.5 }}
+                  sx={{ borderStyle: "dashed", py: 1.5 }}
                 >
                   Thêm cột
                 </Button>
@@ -412,13 +414,12 @@ export default function ProjectDetailPage() {
                   variant="outlined"
                   onClick={handleLoadMoreTasks}
                   disabled={loadingMoreTasks}
-                  sx={{ textTransform: "none" }}
                 >
                   {loadingMoreTasks ? "Đang tải..." : "Xem thêm task"}
                 </Button>
               )}
               {tasks.length > firstPageTasks.length && (
-                <Button variant="outlined" color="inherit" onClick={handleCollapseTasks} sx={{ textTransform: "none" }}>
+                <Button variant="outlined" color="inherit" onClick={handleCollapseTasks}>
                   Thu gọn
                 </Button>
               )}
