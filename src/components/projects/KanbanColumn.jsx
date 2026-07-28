@@ -87,6 +87,16 @@ export default function KanbanColumn({
         {tasks.map((task) => (
           <TaskCard key={task.id} task={task} onClick={() => onOpenTask(task)} />
         ))}
+        {tasks.length === 0 && (
+          <Box sx={{ textAlign: "center", py: 3, color: "text.disabled" }}>
+            <Typography variant="body2">Chưa có task nào</Typography>
+            {canEdit && (
+              <Typography variant="caption" sx={{ display: "block", mt: 0.5 }}>
+                Kéo thả task vào đây, hoặc bấm + để thêm
+              </Typography>
+            )}
+          </Box>
+        )}
       </Stack>
     </Paper>
   );

@@ -291,7 +291,9 @@ export default function ProjectDetailPage() {
           <Typography variant="h4" gutterBottom>
             {project.name}
           </Typography>
-          <Typography color="text.secondary">{project.description}</Typography>
+          <Typography color="text.secondary" fontStyle={project.description ? "normal" : "italic"}>
+            {project.description || "Chưa có mô tả cho dự án này."}
+          </Typography>
         </Box>
 
         <Stack direction="row" spacing={1.5} alignItems="center">

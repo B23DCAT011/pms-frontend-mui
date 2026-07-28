@@ -36,6 +36,14 @@ export default function DashboardPage() {
     load()
   }, [])
 
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Chào buổi sáng'
+    if (hour < 18) return 'Chào buổi chiều'
+    return 'Chào buổi tối'
+  }, [])
+  const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username
+
   const filteredTasks = useMemo(() => {
     if (!onlyMine) return tasks
     return tasks.filter((task) => task.assigned_to?.id === user.id)
@@ -69,8 +77,11 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
+      <Typography variant="h4">
+        {greeting}, {displayName}
+      </Typography>
+      <Typography color="text.secondary" sx={{ mb: 3 }}>
+        Đây là tổng quan công việc của bạn hôm nay.
       </Typography>
 
       <StatTiles projectCount={projectCount} taskCount={filteredTasks.length} overdueCount={overdueCount} />
