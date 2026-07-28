@@ -11,6 +11,7 @@ import MenuItem from '@mui/material/MenuItem'
 import ListItemText from '@mui/material/ListItemText'
 import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
+import MenuIcon from '@mui/icons-material/Menu'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
@@ -36,7 +37,7 @@ const PAGE_TITLES = [
   ['/invitations', 'Lời mời'],
 ]
 
-export default function Topbar() {
+export default function Topbar({ onOpenMenu }) {
   const { user } = useAuth()
   const { mode, toggleMode } = useThemeMode()
   const navigate = useNavigate()
@@ -80,14 +81,26 @@ export default function Topbar() {
       color="inherit"
       elevation={0}
       sx={{
-        width: `calc(100% - ${DRAWER_WIDTH}px)`,
-        ml: `${DRAWER_WIDTH}px`,
+        width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
+        ml: { xs: 0, md: `${DRAWER_WIDTH}px` },
         borderBottom: 1,
         borderColor: 'divider',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Typography variant="h6">{pageTitle}</Typography>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+          <IconButton
+            aria-label="Mở menu"
+            edge="start"
+            onClick={onOpenMenu}
+            sx={{ display: { md: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap>
+            {pageTitle}
+          </Typography>
+        </Stack>
 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Tooltip title="Thông báo">

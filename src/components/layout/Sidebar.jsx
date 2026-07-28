@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen, onCloseMobile }) {
   const location = useLocation()
   const { user, logout } = useAuth()
 
@@ -34,10 +34,17 @@ export default function Sidebar() {
 
   return (
     <Drawer
-      variant="permanent"
+      // Dưới md dùng `temporary` (trượt ra rồi che nền) thay vì `permanent` — sidebar cố
+      // định 240px chiếm gần hết bề ngang điện thoại, phần nội dung không còn chỗ để đọc.
+      variant={mobileOpen === undefined ? 'permanent' : 'temporary'}
+      open={mobileOpen}
+      onClose={onCloseMobile}
+      // Giữ DOM khi đóng: mở lại tức thì, và tránh dựng lại cây menu mỗi lần bật.
+      ModalProps={{ keepMounted: true }}
       sx={{
         width: DRAWER_WIDTH,
         flexShrink: 0,
+        display: mobileOpen === undefined ? { xs: 'none', md: 'block' } : { xs: 'block', md: 'none' },
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
@@ -53,7 +60,14 @@ export default function Sidebar() {
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => {
           const selected = end ? location.pathname === to : location.pathname.startsWith(to)
           return (
-            <ListItemButton key={to} component={NavLink} to={to} selected={selected} sx={{ borderRadius: 1, mb: 0.5 }}>
+            <ListItemButton
+              key={to}
+              component={NavLink}
+              to={to}
+              selected={selected}
+              onClick={onCloseMobile}
+              sx={{ borderRadius: 1, mb: 0.5 }}
+            >
               <ListItemIcon>
                 <Icon color={selected ? 'primary' : 'inherit'} />
               </ListItemIcon>
