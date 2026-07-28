@@ -66,19 +66,29 @@ export default function getTheme(mode) {
       MuiTextField: {
         defaultProps: { size: 'small' },
       },
-      MuiCssBaseline: {
-        styleOverrides: (theme) => ({
-          // Chrome tô nền autofill thẳng lên thẻ <input>; nút adornment (con mắt hiện mật
-          // khẩu) nằm ngoài <input> nên không bị tô → ô bị chia 2 mảng màu. Không set đè
-          // background-color được (Chrome khoá), cách duy nhất là phủ box-shadow inset thật
-          // dày lên đúng màu nền của field.
-          'input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus': {
-            WebkitBoxShadow: `0 0 0 100px ${theme.palette.background.paper} inset`,
-            WebkitTextFillColor: theme.palette.text.primary,
-            caretColor: theme.palette.text.primary,
-            borderRadius: 'inherit',
-          },
-        }),
+      MuiOutlinedInput: {
+        styleOverrides: {
+          // Ô đã autofill có 2 thứ tô nền đè lên: Chrome tô nền của chính nó, và MUI hardcode
+          // `0 0 0 100px #266798 inset` (xanh) cho dark mode ngay trên slot `input` này.
+          //
+          // Không set đè `background-color` được (Chrome khoá bằng !important). Cách phủ lại
+          // bằng box-shadow inset thì kín nền nhưng chỉ phủ trong lòng thẻ <input> — không
+          // với tới vùng adornment (nút con mắt), nên lộ mép ở ranh giới hai vùng.
+          //
+          // Nên thay vì phủ đè, chặn luôn: đặt transition-delay cực lớn cho background-color
+          // khiến màu nền của Chrome không bao giờ kịp hiện, và tắt box-shadow của MUI. Kết
+          // quả là ô giữ nguyên nền trong suốt như ô chưa autofill, không phụ thuộc màu nền
+          // của phần tử cha. Chỉ còn màu chữ phải chỉ định tay vì Chrome ép qua
+          // -webkit-text-fill-color.
+          input: ({ theme }) => ({
+            '&:-webkit-autofill, &:-webkit-autofill:hover, &:-webkit-autofill:focus': {
+              transition: 'background-color 600000s 0s, color 600000s 0s',
+              WebkitBoxShadow: 'none',
+              WebkitTextFillColor: theme.palette.text.primary,
+              caretColor: theme.palette.text.primary,
+            },
+          }),
+        },
       },
       MuiChip: {
         styleOverrides: {

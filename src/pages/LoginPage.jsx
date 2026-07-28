@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
-import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import PasswordField from '../components/PasswordField.jsx'
+import AuthLayout from '../components/layout/AuthLayout.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { Link as RouterLink } from 'react-router-dom'
 import Link from '@mui/material/Link'
-import logo from '../assets/kiai-logo.png'
+import useDocumentTitle from '../hooks/useDocumentTitle.js'
 
 export default function LoginPage() {
+  useDocumentTitle('Đăng nhập')
   const { login } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -41,67 +42,49 @@ export default function LoginPage() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-      }}
-    >
-      <Paper variant="outlined" sx={{ p: 4, width: 360 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <img src={logo} alt="KIAI" style={{ height: 40 }} />
-        </Box>
+    <AuthLayout title="Đăng nhập" subtitle="Nhập thông tin tài khoản để tiếp tục.">
+      {formError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {formError}
+        </Alert>
+      )}
 
-        <Typography sx={{ textAlign: 'center' }} variant="h5" gutterBottom>
-          Đăng nhập
+      <Box component="form" onSubmit={handleSubmit} noValidate>
+        <TextField
+          label="Tên đăng nhập hoặc email"
+          fullWidth
+          margin="normal"
+          autoComplete="username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          error={Boolean(fieldErrors.username)}
+          helperText={fieldErrors.username?.[0]}
+        />
+        <PasswordField
+          label="Mật khẩu"
+          fullWidth
+          margin="normal"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={Boolean(fieldErrors.password)}
+          helperText={fieldErrors.password?.[0]}
+        />
+        <Typography sx={{ mt: 1, textAlign: 'right' }} variant="body2">
+          <Link component={RouterLink} to="/forgot-password">
+            Quên mật khẩu?
+          </Link>
         </Typography>
-
-        {formError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {formError}
-          </Alert>
-        )}
-
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField
-            size="small"
-            label="Username"
-            fullWidth
-            margin="normal"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            error={Boolean(fieldErrors.username)}
-            helperText={fieldErrors.username?.[0]}
-          />
-          <PasswordField
-            label="Password"
-            fullWidth
-            margin="normal"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            error={Boolean(fieldErrors.password)}
-            helperText={fieldErrors.password?.[0]}
-          />
-          <Typography sx={{ mt: 1, textAlign: 'right' }} variant="body2">
-            <Link component={RouterLink} to="/forgot-password">Quên mật khẩu?</Link>
-          </Typography>
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={submitting}
-          >
-            {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-          </Button>
-          <Typography sx={{ mt: 2, textAlign: 'center' }} variant="body2">
-            Chưa có tài khoản? <Link component={RouterLink} to="/register">Đăng ký</Link>
-          </Typography>
-        </Box>
-      </Paper>
-    </Box>
+        <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3 }} disabled={submitting}>
+          {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        </Button>
+        <Typography sx={{ mt: 3, textAlign: 'center' }} variant="body2" color="text.secondary">
+          Chưa có tài khoản?{' '}
+          <Link component={RouterLink} to="/register" fontWeight={600}>
+            Đăng ký
+          </Link>
+        </Typography>
+      </Box>
+    </AuthLayout>
   )
 }

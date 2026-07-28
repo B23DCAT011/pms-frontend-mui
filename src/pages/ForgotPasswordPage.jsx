@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import Box from '@mui/material/Box'
-import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
@@ -10,9 +9,11 @@ import Link from '@mui/material/Link'
 import { forgotPassword, resetPassword } from '../api/auth.js'
 import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
 import PasswordField from '../components/PasswordField.jsx'
-import logo from '../assets/kiai-logo.png'
+import AuthLayout from '../components/layout/AuthLayout.jsx'
+import useDocumentTitle from '../hooks/useDocumentTitle.js'
 
 export default function ForgotPasswordPage() {
+  useDocumentTitle('Quên mật khẩu')
   const navigate = useNavigate()
   const [step, setStep] = useState('email') // 'email' | 'reset'
 
@@ -80,88 +81,83 @@ export default function ForgotPasswordPage() {
 
   if (step === 'reset') {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-        <Paper variant="outlined" sx={{ p: 4, width: 360 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <img src={logo} alt="KIAI" style={{ height: 40 }} />
-          </Box>
+      <AuthLayout title="Đặt lại mật khẩu" subtitle={`Mã 6 số vừa được gửi tới ${email}`}>
+        {resetError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {resetError}
+          </Alert>
+        )}
 
-          <Typography variant="h5" gutterBottom>
-            Đặt lại mật khẩu
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Mã 6 số vừa gửi tới {email}
-          </Typography>
-
-          {resetError && <Alert severity="error" sx={{ mb: 2 }}>{resetError}</Alert>}
-
-          <Box component="form" onSubmit={handleReset} noValidate>
-            <TextField
-              autoComplete='off'
-              size="small"
-              label="Mã OTP"
-              fullWidth
-              margin="normal"
-              value={otp}
-              onChange={(event) => setOtp(event.target.value)}
-            />
-            <PasswordField
-              autoComplete="new-password"
-              label="Mật khẩu mới"
-              fullWidth
-              margin="normal"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-            />
-            <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
-              {submitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-            </Button>
-          </Box>
-
-          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
-          <Button fullWidth sx={{ mt: 1 }} onClick={handleResend} disabled={resendCooldown > 0 || (turnstileEnabled && !captchaToken)}>
-            {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
+        <Box component="form" onSubmit={handleReset} noValidate>
+          <TextField
+            autoComplete="one-time-code"
+            label="Mã OTP"
+            fullWidth
+            margin="normal"
+            value={otp}
+            onChange={(event) => setOtp(event.target.value)}
+          />
+          <PasswordField
+            autoComplete="new-password"
+            label="Mật khẩu mới"
+            fullWidth
+            margin="normal"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+          />
+          <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3 }} disabled={submitting}>
+            {submitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
           </Button>
-        </Paper>
-      </Box>
+        </Box>
+
+        <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
+        <Button
+          fullWidth
+          sx={{ mt: 1 }}
+          onClick={handleResend}
+          disabled={resendCooldown > 0 || (turnstileEnabled && !captchaToken)}
+        >
+          {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
+        </Button>
+      </AuthLayout>
     )
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-      <Paper variant="outlined" sx={{ p: 4, width: 360 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <img src={logo} alt="KIAI" style={{ height: 40 }} />
-        </Box>
+    <AuthLayout title="Quên mật khẩu" subtitle="Nhập email của bạn để nhận mã OTP đặt lại mật khẩu.">
+      {emailError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {emailError}
+        </Alert>
+      )}
 
-        <Typography sx={{ textAlign: 'center' }} variant="h5" gutterBottom>
-          Quên mật khẩu
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Nhập email để nhận mã OTP đặt lại mật khẩu
-        </Typography>
+      <Box component="form" onSubmit={handleRequestOtp} noValidate>
+        <TextField
+          label="Email"
+          fullWidth
+          margin="normal"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          fullWidth
+          sx={{ mt: 3 }}
+          disabled={submitting || (turnstileEnabled && !captchaToken)}
+        >
+          {submitting ? 'Đang gửi...' : 'Gửi mã OTP'}
+        </Button>
+      </Box>
 
-        {emailError && <Alert severity="error" sx={{ mb: 2 }}>{emailError}</Alert>}
-
-        <Box component="form" onSubmit={handleRequestOtp} noValidate>
-          <TextField
-            size="small"
-            label="Email"
-            fullWidth
-            margin="normal"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting || (turnstileEnabled && !captchaToken)}>
-            {submitting ? 'Đang gửi...' : 'Gửi mã OTP'}
-          </Button>
-        </Box>
-
-        <Typography sx={{ mt: 2, textAlign: 'center' }} variant="body2">
-          <Link component={RouterLink} to="/login">Quay lại đăng nhập</Link>
-        </Typography>
-      </Paper>
-    </Box>
+      <Typography sx={{ mt: 3, textAlign: 'center' }} variant="body2">
+        <Link component={RouterLink} to="/login">
+          Quay lại đăng nhập
+        </Link>
+      </Typography>
+    </AuthLayout>
   )
 }
