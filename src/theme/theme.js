@@ -66,6 +66,20 @@ export default function getTheme(mode) {
       MuiTextField: {
         defaultProps: { size: 'small' },
       },
+      MuiCssBaseline: {
+        styleOverrides: (theme) => ({
+          // Chrome tô nền autofill thẳng lên thẻ <input>; nút adornment (con mắt hiện mật
+          // khẩu) nằm ngoài <input> nên không bị tô → ô bị chia 2 mảng màu. Không set đè
+          // background-color được (Chrome khoá), cách duy nhất là phủ box-shadow inset thật
+          // dày lên đúng màu nền của field.
+          'input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus': {
+            WebkitBoxShadow: `0 0 0 100px ${theme.palette.background.paper} inset`,
+            WebkitTextFillColor: theme.palette.text.primary,
+            caretColor: theme.palette.text.primary,
+            borderRadius: 'inherit',
+          },
+        }),
+      },
       MuiChip: {
         styleOverrides: {
           root: { fontWeight: 600 },
