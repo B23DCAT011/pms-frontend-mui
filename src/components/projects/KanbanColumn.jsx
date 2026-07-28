@@ -8,6 +8,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import AddIcon from "@mui/icons-material/Add";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import { alpha } from "@mui/material/styles";
 import TaskCard from "./TaskCard.jsx";
 
 const CATEGORY_DOT_COLOR = { todo: "grey.400", in_progress: "info.main", done: "success.main" };
@@ -25,9 +26,11 @@ export default function KanbanColumn({
   onDeleteStatus,
 }) {
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleDrop = (e) => {
     e.preventDefault();
+    setDragOver(false);
     const taskId = e.dataTransfer.getData("text/plain");
     onDropTask(taskId);
   };
@@ -37,12 +40,30 @@ export default function KanbanColumn({
   return (
     <Paper
       variant="outlined"
-      sx={{ p: 2, bgcolor: "background.default", height: "100%", maxHeight: 1000, display: "flex", flexDirection: "column" }}
-      onDragOver={(e) => e.preventDefault()}
+      sx={{
+        p: 2,
+        bgcolor: dragOver ? (theme) => alpha(theme.palette.primary.main, 0.08) : "background.default",
+        borderColor: dragOver ? "primary.main" : "divider",
+        borderStyle: dragOver ? "dashed" : "solid",
+        transition: "background-color .15s, border-color .15s",
+        height: "100%",
+        maxHeight: 1000,
+        display: "flex",
+        flexDirection: "column",
+      }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      // dragleave bắn cả khi con trỏ đi qua phần tử con bên trong cột, nên phải loại
+      // trường hợp đó ra bằng contains() — không thì cột nhấp nháy liên tục lúc kéo.
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false);
+      }}
       onDrop={handleDrop}
     >
       <Box sx={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", mb: 1, flexShrink: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Box
             sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: CATEGORY_DOT_COLOR[category] ?? "grey.400" }}
           />
@@ -51,7 +72,7 @@ export default function KanbanColumn({
           </Typography>
         </Stack>
 
-        <Stack direction="row" flexShrink={0}>
+        <Stack direction="row" sx={{ flexShrink: 0 }}>
           <IconButton size="small" disabled={!canEdit} onClick={onAddTask} aria-label="Thêm task vào cột">
             <AddIcon fontSize="small" />
           </IconButton>

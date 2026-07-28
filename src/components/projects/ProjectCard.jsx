@@ -46,7 +46,20 @@ export default function ProjectCard({ project, onEdit, onDelete }) {
   const closeMenu = () => setMenuAnchor(null);
 
   return (
-    <Card variant="outlined" sx={{ position: "relative" }}>
+    <Card
+      variant="outlined"
+      sx={{
+        position: "relative",
+        height: "100%",
+        transition: "border-color .15s, box-shadow .15s, transform .15s",
+        "&:hover": {
+          borderColor: accentColor,
+          transform: "translateY(-2px)",
+          boxShadow: (theme) =>
+            `0 4px 14px ${alpha(theme.palette.common.black, theme.palette.mode === "dark" ? 0.5 : 0.12)}`,
+        },
+      }}
+    >
       {isOwner && (
         <>
           <IconButton
