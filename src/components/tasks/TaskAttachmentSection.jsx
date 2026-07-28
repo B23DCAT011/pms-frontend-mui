@@ -124,7 +124,7 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
           Tệp đính kèm ({attachments.length})
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Button size="small" onClick={handleToggleTrash} sx={{ textTransform: "none" }}>
+          <Button size="small" onClick={handleToggleTrash}>
             {showTrash ? "Ẩn thùng rác" : "Thùng rác"}
           </Button>
           {canUpload && (
@@ -133,7 +133,6 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
               startIcon={<AttachFileIcon />}
               onClick={() => fileInputRef.current.click()}
               disabled={uploading}
-              sx={{ textTransform: "none" }}
             >
               Tải file lên
             </Button>
@@ -150,7 +149,7 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
 
       <Stack spacing={1}>
         {attachments.map((att) => (
-          <Stack key={att.id} direction="row" alignItems="center" spacing={1}>
+          <Stack key={att.id} direction="row" spacing={1} sx={{ alignItems: "center" }}>
             <InsertDriveFileIcon fontSize="small" color="disabled" />
             <Link href={att.file_url} target="_blank" rel="noopener noreferrer" sx={{ flex: 1, minWidth: 0 }} noWrap>
               {att.file_name}
@@ -185,7 +184,7 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
             </Typography>
           ) : (
             trash.map((att) => (
-              <Stack key={att.id} direction="row" alignItems="center" spacing={1}>
+              <Stack key={att.id} direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 <InsertDriveFileIcon fontSize="small" color="disabled" />
                 <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap color="text.secondary">
                   {att.file_name}
@@ -196,7 +195,6 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
                       size="small"
                       disabled={busyTrashId === att.id}
                       onClick={() => handleRestore(att)}
-                      sx={{ textTransform: "none" }}
                     >
                       Khôi phục
                     </Button>
@@ -205,7 +203,6 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
                       color="error"
                       disabled={busyTrashId === att.id}
                       onClick={() => handleHardDeleteTrash(att)}
-                      sx={{ textTransform: "none" }}
                     >
                       Xoá vĩnh viễn
                     </Button>

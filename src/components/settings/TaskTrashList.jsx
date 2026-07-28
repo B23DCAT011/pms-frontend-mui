@@ -95,7 +95,7 @@ export default function TaskTrashList({ refreshKey }) {
             <Paper key={task.id} variant="outlined" sx={{ p: 2 }}>
               <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.5 }}>
                     <Chip label={projectsById[task.project] || "..."} size="small" variant="outlined" />
                     <Chip
                       label={PRIORITY_LABEL[task.priority]}
@@ -111,7 +111,7 @@ export default function TaskTrashList({ refreshKey }) {
                     {task.title}
                   </Typography>
                 </Box>
-                <Stack direction="row" spacing={1} flexShrink={0}>
+                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                   <Button
                     size="small"
                     variant="contained"
@@ -137,7 +137,7 @@ export default function TaskTrashList({ refreshKey }) {
       )}
 
       {next && (
-        <Stack alignItems="center" sx={{ mt: 3 }}>
+        <Stack sx={{ alignItems: "center", mt: 3 }}>
           <Button variant="outlined" onClick={handleLoadMore} disabled={loadingMore}>
             {loadingMore ? "Đang tải..." : "Xem thêm"}
           </Button>

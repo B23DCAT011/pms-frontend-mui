@@ -31,7 +31,7 @@ export default function MyTaskRow({ task, projectName, overdue, onClick }) {
         <Typography variant="body2" fontWeight={500} noWrap>
           {task.title}
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", mt: 0.5 }}>
           <Chip label={projectName} size="small" variant="outlined" sx={{ maxWidth: 180 }} />
           <Chip
             label={CATEGORY_LABEL[task.status.category]}
@@ -43,7 +43,7 @@ export default function MyTaskRow({ task, projectName, overdue, onClick }) {
       </Box>
 
       {task.deadline && (
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexShrink: 0 }}>
           <CalendarTodayIcon sx={{ fontSize: 14 }} color={overdue ? "error" : "disabled"} />
           <Typography variant="caption" color={overdue ? "error.main" : "text.secondary"}>
             {new Date(task.deadline).toLocaleDateString("vi-VN")}

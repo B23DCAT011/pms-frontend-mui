@@ -61,7 +61,7 @@ export default function CommentAttachmentSection({ taskId, commentId, currentUse
         </Alert>
       )}
       {attachments.map((att) => (
-        <Stack key={att.id} direction="row" alignItems="center" spacing={0.5}>
+        <Stack key={att.id} direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
           <InsertDriveFileIcon sx={{ fontSize: 14 }} color="disabled" />
           <Link href={att.file_url} target="_blank" rel="noopener noreferrer" variant="caption" noWrap sx={{ maxWidth: 200 }}>
             {att.file_name}
@@ -80,7 +80,7 @@ export default function CommentAttachmentSection({ taskId, commentId, currentUse
             startIcon={<AttachFileIcon sx={{ fontSize: 14 }} />}
             onClick={() => fileInputRef.current.click()}
             disabled={uploading}
-            sx={{ textTransform: "none", minWidth: 0, p: 0, alignSelf: "flex-start" }}
+            sx={{ minWidth: 0, p: 0, alignSelf: "flex-start" }}
           >
             Đính kèm file
           </Button>

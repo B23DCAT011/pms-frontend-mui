@@ -55,7 +55,6 @@ export default function PendingApprovalsButton({ projectId, onChanged }) {
         color="warning"
         startIcon={<PendingActionsIcon fontSize="small" />}
         onClick={handleOpen}
-        sx={{ textTransform: "none" }}
       >
         Yêu cầu duyệt
       </Button>

@@ -43,7 +43,7 @@ function CommentRow({ taskId, comment, currentUserId, isAdmin, canReply, onReply
     <Stack direction="row" spacing={1.5}>
       <Avatar sx={{ width: 28, height: 28, fontSize: 13 }}>{authorName(comment.user).charAt(0).toUpperCase()}</Avatar>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" spacing={1} alignItems="baseline">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "baseline" }}>
           <Typography variant="body2" fontWeight={600}>
             {authorName(comment.user)}
           </Typography>
@@ -80,22 +80,22 @@ function CommentRow({ taskId, comment, currentUserId, isAdmin, canReply, onReply
 
         <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
           {canReply && (
-            <Button size="small" onClick={() => setReplying((v) => !v)} sx={{ textTransform: "none", minWidth: 0, p: 0 }}>
+            <Button size="small" onClick={() => setReplying((v) => !v)} sx={{ minWidth: 0, p: 0 }}>
               Trả lời
             </Button>
           )}
           {isAuthor && !editing && (
-            <Button size="small" onClick={() => setEditing(true)} sx={{ textTransform: "none", minWidth: 0, p: 0 }}>
+            <Button size="small" onClick={() => setEditing(true)} sx={{ minWidth: 0, p: 0 }}>
               Sửa
             </Button>
           )}
           {(isAuthor || isAdmin) && (
-            <Button size="small" color="error" onClick={() => onDelete(comment)} sx={{ textTransform: "none", minWidth: 0, p: 0 }}>
+            <Button size="small" color="error" onClick={() => onDelete(comment)} sx={{ minWidth: 0, p: 0 }}>
               Xoá
             </Button>
           )}
           {comment.replies.length > 0 && (
-            <Button size="small" onClick={() => setShowReplies((v) => !v)} sx={{ textTransform: "none", minWidth: 0, p: 0 }}>
+            <Button size="small" onClick={() => setShowReplies((v) => !v)} sx={{ minWidth: 0, p: 0 }}>
               {showReplies ? "Ẩn trả lời" : `Xem ${comment.replies.length} trả lời`}
             </Button>
           )}
@@ -333,7 +333,7 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
         <Typography variant="subtitle1" fontWeight={600}>
           Bình luận ({comments.length})
         </Typography>
-        <Button size="small" onClick={handleToggleTrash} sx={{ textTransform: "none" }}>
+        <Button size="small" onClick={handleToggleTrash}>
           {showTrash ? "Ẩn thùng rác" : "Thùng rác"}
         </Button>
       </Stack>
@@ -372,13 +372,12 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
               variant="outlined"
               onClick={handleLoadMoreComments}
               disabled={loadingMoreComments}
-              sx={{ textTransform: "none" }}
             >
               {loadingMoreComments ? "Đang tải..." : "Xem thêm bình luận"}
             </Button>
           )}
           {comments.length > firstPageComments.length && (
-            <Button variant="outlined" color="inherit" onClick={handleCollapseComments} sx={{ textTransform: "none" }}>
+            <Button variant="outlined" color="inherit" onClick={handleCollapseComments}>
               Thu gọn
             </Button>
           )}
@@ -398,12 +397,12 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
             </Typography>
           ) : (
             trash.map((comment) => (
-              <Stack key={comment.id} direction="row" spacing={1.5} alignItems="flex-start">
+              <Stack key={comment.id} direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
                 <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
                   {authorName(comment.user).charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="baseline">
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "baseline" }}>
                     <Typography variant="body2" fontWeight={600}>
                       {authorName(comment.user)}
                     </Typography>
@@ -422,7 +421,7 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
                         size="small"
                         disabled={busyTrashId === comment.id}
                         onClick={() => handleRestoreComment(comment)}
-                        sx={{ textTransform: "none", minWidth: 0, p: 0 }}
+                        sx={{ minWidth: 0, p: 0 }}
                       >
                         Khôi phục
                       </Button>
@@ -431,7 +430,7 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
                         color="error"
                         disabled={busyTrashId === comment.id}
                         onClick={() => handleHardDeleteComment(comment)}
-                        sx={{ textTransform: "none", minWidth: 0, p: 0 }}
+                        sx={{ minWidth: 0, p: 0 }}
                       >
                         Xoá vĩnh viễn
                       </Button>
@@ -442,8 +441,8 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
             ))
           )}
           {trashNext && (
-            <Stack alignItems="center">
-              <Button variant="outlined" onClick={handleLoadMoreTrash} disabled={trashLoadingMore} sx={{ textTransform: "none" }}>
+            <Stack sx={{ alignItems: "center" }}>
+              <Button variant="outlined" onClick={handleLoadMoreTrash} disabled={trashLoadingMore}>
                 {trashLoadingMore ? "Đang tải..." : "Xem thêm"}
               </Button>
             </Stack>

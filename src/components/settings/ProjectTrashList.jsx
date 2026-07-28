@@ -90,7 +90,7 @@ export default function ProjectTrashList({ onChange }) {
                     {project.description || "Không có mô tả"}
                   </Typography>
                 </Box>
-                <Stack direction="row" spacing={1} flexShrink={0}>
+                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                   <Button
                     size="small"
                     variant="contained"
@@ -116,7 +116,7 @@ export default function ProjectTrashList({ onChange }) {
       )}
 
       {pageCount > 1 && (
-        <Stack alignItems="center" sx={{ mt: 3 }}>
+        <Stack sx={{ alignItems: "center", mt: 3 }}>
           <Pagination count={pageCount} page={page} onChange={(_, value) => setPage(value)} disabled={loading} />
         </Stack>
       )}

@@ -41,7 +41,7 @@ export default function MembersPanel({ members, canEdit, currentUserId, onRemove
           const name = memberName(m);
           const isSelf = m.user.id === currentUserId;
           return (
-            <Stack key={m.id} direction="row" spacing={1.5} alignItems="center">
+            <Stack key={m.id} direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
               <Avatar sx={{ width: 32, height: 32, fontSize: 14, flexShrink: 0 }}>
                 {name.charAt(0).toUpperCase()}
               </Avatar>
@@ -73,7 +73,7 @@ export default function MembersPanel({ members, canEdit, currentUserId, onRemove
         )}
 
         {expanded && canEdit && (
-          <Button fullWidth variant="outlined" size="small" onClick={onAddMember} sx={{ textTransform: "none" }}>
+          <Button fullWidth variant="outlined" size="small" onClick={onAddMember}>
             + Thêm thành viên
           </Button>
         )}

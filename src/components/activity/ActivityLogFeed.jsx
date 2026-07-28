@@ -163,13 +163,12 @@ export default function ActivityLogFeed({ scope, id }) {
               variant="outlined"
               onClick={handleLoadMore}
               disabled={loadingMore}
-              sx={{ textTransform: "none" }}
             >
               {loadingMore ? "Đang tải..." : "Xem thêm"}
             </Button>
           )}
           {logs.length > firstPageLogs.length && (
-            <Button size="small" variant="outlined" color="inherit" onClick={handleCollapse} sx={{ textTransform: "none" }}>
+            <Button size="small" variant="outlined" color="inherit" onClick={handleCollapse}>
               Thu gọn
             </Button>
           )}

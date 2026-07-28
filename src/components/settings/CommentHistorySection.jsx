@@ -63,7 +63,7 @@ export default function CommentHistorySection() {
               onClick={() => goToComment(comment)}
               sx={{ p: 2, cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.75 }}>
                 <Chip label={comment.project_name} size="small" variant="outlined" />
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {comment.task_title}
@@ -91,7 +91,7 @@ export default function CommentHistorySection() {
       )}
 
       {pageCount > 1 && (
-        <Stack alignItems="center" sx={{ mt: 3 }}>
+        <Stack sx={{ alignItems: "center", mt: 3 }}>
           <Pagination count={pageCount} page={page} onChange={(_, value) => setPage(value)} disabled={loading} />
         </Stack>
       )}
