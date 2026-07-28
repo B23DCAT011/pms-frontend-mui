@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { listMyInvitations, acceptInvitation, declineInvitation } from "../api/invitations.js";
+import PageHeader from "../components/layout/PageHeader.jsx";
 
 export default function InvitationsPage() {
   const [invitations, setInvitations] = useState([]);
@@ -46,9 +47,7 @@ export default function InvitationsPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>
-        Lời mời tham gia dự án
-      </Typography>
+      <PageHeader title="Lời mời tham gia dự án" subtitle="Xác nhận hoặc từ chối lời mời từ các dự án." />
 
       {actionError && (
         <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 2 }}>

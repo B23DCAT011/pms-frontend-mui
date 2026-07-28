@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
 import CircularProgress from '@mui/material/CircularProgress'
 import FormControlLabel from '@mui/material/FormControlLabel'
@@ -8,6 +7,7 @@ import Switch from '@mui/material/Switch'
 import { listProjects } from '../api/projects.js'
 import { listAllMyTasks } from '../api/tasks.js'
 import { useAuth } from '../auth/AuthContext.jsx'
+import PageHeader from '../components/layout/PageHeader.jsx'
 import RecentProjectsList from '../components/dashboard/RecentProjectsList.jsx'
 import StatTiles from '../components/dashboard/StatTiles.jsx'
 import TaskStatusDonut from '../components/dashboard/TaskStatusDonut.jsx'
@@ -77,12 +77,7 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      <Typography variant="h4">
-        {greeting}, {displayName}
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Đây là tổng quan công việc của bạn hôm nay.
-      </Typography>
+      <PageHeader title={`${greeting}, ${displayName}`} subtitle="Đây là tổng quan công việc của bạn hôm nay." />
 
       <StatTiles projectCount={projectCount} taskCount={filteredTasks.length} overdueCount={overdueCount} />
 

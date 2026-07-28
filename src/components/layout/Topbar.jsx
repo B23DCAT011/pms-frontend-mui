@@ -10,11 +10,11 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import ListItemText from '@mui/material/ListItemText'
 import Divider from '@mui/material/Divider'
+import Tooltip from '@mui/material/Tooltip'
 import NotificationsIcon from '@mui/icons-material/Notifications'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useThemeMode } from '../../theme/ThemeModeContext.jsx'
 import { listNotifications, markNotificationRead } from '../../api/notifications.js'
@@ -24,14 +24,28 @@ import { DRAWER_WIDTH } from './Sidebar.jsx'
 const PREVIEW_LIMIT = 5
 const POLL_INTERVAL_MS = 30000
 
+// Nhãn hiển thị trên Topbar theo route đang mở. Prefix dài đặt trước prefix ngắn vì
+// vòng lặp dừng ở phần tử khớp đầu tiên ('/projects/abc' phải ra "Chi tiết project",
+// không phải "Projects").
+const PAGE_TITLES = [
+  ['/projects/', 'Chi tiết project'],
+  ['/projects', 'Projects'],
+  ['/my-tasks', 'My Tasks'],
+  ['/settings', 'Settings'],
+  ['/notifications', 'Thông báo'],
+  ['/invitations', 'Lời mời'],
+]
+
 export default function Topbar() {
   const { user } = useAuth()
   const { mode, toggleMode } = useThemeMode()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [notifications, setNotifications] = useState([])
   const [anchorEl, setAnchorEl] = useState(null)
 
   const name = user.first_name || user.username
+  const pageTitle = PAGE_TITLES.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? 'Dashboard'
 
   useEffect(() => {
     const fetchNotifications = () => {
@@ -73,14 +87,16 @@ export default function Topbar() {
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Typography variant="h6">Hi, {name}</Typography>
+        <Typography variant="h6">{pageTitle}</Typography>
 
-        <Stack direction="row" spacing={1} alignItems="center">
-          <IconButton aria-label="Thông báo" onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <Badge badgeContent={unreadCount} color="error" max={9}>
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Tooltip title="Thông báo">
+            <IconButton aria-label="Thông báo" onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <Badge badgeContent={unreadCount} color="error" max={9}>
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
           <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
             {notifications.length === 0 && (
               <MenuItem disabled>
@@ -102,13 +118,14 @@ export default function Topbar() {
             ]}
           </Menu>
 
-          <IconButton aria-label="Trợ giúp">
-            <HelpOutlineIcon />
-          </IconButton>
-          <IconButton aria-label="Đổi giao diện" onClick={toggleMode}>
-            {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-          </IconButton>
-          <Avatar sx={{ width: 32, height: 32 }}>{name.charAt(0).toUpperCase()}</Avatar>
+          <Tooltip title={mode === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}>
+            <IconButton aria-label="Đổi giao diện" onClick={toggleMode}>
+              {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+            </IconButton>
+          </Tooltip>
+          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 15, fontWeight: 600 }}>
+            {name.charAt(0).toUpperCase()}
+          </Avatar>
         </Stack>
       </Toolbar>
     </AppBar>

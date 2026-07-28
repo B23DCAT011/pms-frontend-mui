@@ -75,7 +75,7 @@ export default function NotificationsPage() {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <Typography variant="h5">Thông báo</Typography>
         <Button onClick={handleMarkAllRead} disabled={!hasUnread}>
           Đánh dấu tất cả đã đọc

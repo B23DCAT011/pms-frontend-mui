@@ -119,7 +119,7 @@ export default function TaskAttachmentSection({ taskId, currentUserId, isAdmin, 
 
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", mb: 1 }}>
         <Typography variant="subtitle1" fontWeight={600}>
           Tệp đính kèm ({attachments.length})
         </Typography>

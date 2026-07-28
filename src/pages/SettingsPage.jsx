@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import PageHeader from "../components/layout/PageHeader.jsx";
 import ProfileSection from "../components/settings/ProfileSection.jsx";
 import ChangePasswordSection from "../components/settings/ChangePasswordSection.jsx";
 import ChangeEmailSection from "../components/settings/ChangeEmailSection.jsx";
@@ -14,9 +14,7 @@ export default function SettingsPage() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Settings
-      </Typography>
+      <PageHeader title="Settings" subtitle="Quản lý hồ sơ, tài khoản và dữ liệu đã xoá." />
 
       <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
         <Tab label="Hồ sơ" />

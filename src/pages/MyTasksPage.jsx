@@ -14,6 +14,7 @@ import { useAuth } from "../auth/AuthContext.jsx";
 import { listAllMyAssignedTasks } from "../api/tasks.js";
 import { listAllMyProjects } from "../api/projects.js";
 import MyTaskRow from "../components/tasks/MyTaskRow.jsx";
+import PageHeader from "../components/layout/PageHeader.jsx";
 
 const GROUPS = [
   { key: "overdue", label: "Quá hạn", color: "error.main" },
@@ -104,14 +105,9 @@ export default function MyTasksPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>
-        My Tasks
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Toàn bộ task của bạn.
-      </Typography>
+      <PageHeader title="My Tasks" subtitle="Toàn bộ task được giao cho bạn." />
 
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 3 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", mb: 3 }}>
         <TextField
           label="Tìm kiếm task"
           value={search}

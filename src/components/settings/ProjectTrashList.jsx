@@ -81,7 +81,7 @@ export default function ProjectTrashList({ onChange }) {
         <Stack spacing={1.5}>
           {projects.map((project) => (
             <Paper key={project.id} variant="outlined" sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
+              <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle1" fontWeight={600} noWrap>
                     {project.name}

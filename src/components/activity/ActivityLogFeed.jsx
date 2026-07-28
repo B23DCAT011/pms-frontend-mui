@@ -156,7 +156,7 @@ export default function ActivityLogFeed({ scope, id }) {
       </Stack>
 
       {(logsNext || logs.length > firstPageLogs.length) && (
-        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "center", mt: 2 }}>
           {logsNext && (
             <Button
               size="small"

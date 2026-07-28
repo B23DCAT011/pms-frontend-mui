@@ -329,7 +329,7 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", mb: 1 }}>
         <Typography variant="subtitle1" fontWeight={600}>
           Bình luận ({comments.length})
         </Typography>
@@ -366,7 +366,7 @@ export default function CommentSection({ taskId, currentUserId, isAdmin }) {
       </Stack>
 
       {(commentsNext || comments.length > firstPageComments.length) && (
-        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "center", mt: 2 }}>
           {commentsNext && (
             <Button
               variant="outlined"

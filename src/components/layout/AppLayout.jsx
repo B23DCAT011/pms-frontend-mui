@@ -11,7 +11,9 @@ export default function AppLayout() {
       <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, minWidth: 0, p: 3 }}>
         <Toolbar />
-        <Outlet />
+        <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   )

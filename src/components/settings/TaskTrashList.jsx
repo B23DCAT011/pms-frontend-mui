@@ -93,7 +93,7 @@ export default function TaskTrashList({ refreshKey }) {
         <Stack spacing={1.5}>
           {tasks.map((task) => (
             <Paper key={task.id} variant="outlined" sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
+              <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                     <Chip label={projectsById[task.project] || "..."} size="small" variant="outlined" />

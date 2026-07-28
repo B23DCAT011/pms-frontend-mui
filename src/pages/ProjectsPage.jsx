@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import { listProjects, deleteProject } from "../api/projects.js";
 import ProjectCard from "../components/projects/ProjectCard.jsx";
+import ProjectCardSkeleton from "../components/projects/ProjectCardSkeleton.jsx";
 import ProjectFormDialog from "../components/projects/ProjectFormDialog.jsx";
+import PageHeader from "../components/layout/PageHeader.jsx";
+import EmptyState from "../components/layout/EmptyState.jsx";
 import { useConfirm } from "../confirm/ConfirmContext.jsx";
 import { useNotification } from "../notifications/NotificationContext.jsx";
 
@@ -87,27 +94,42 @@ export default function ProjectsPage() {
       .catch((err) => notifyError(err.message));
   };
 
+  const isEmpty = !loading && projects.length === 0;
+
   return (
     <>
-      <Typography variant="h4" gutterBottom>
-        Projects
-      </Typography>
+      <PageHeader
+        title="Projects"
+        subtitle="Các dự án bạn tạo hoặc đang tham gia."
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateProject}>
+            Tạo project
+          </Button>
+        }
+      />
 
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-        <TextField
-          label="Tìm kiếm project"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          size="small"
-          sx={{ width: 300 }}
-        />
-
-        <Button variant="contained" onClick={openCreateProject}>
-          Tạo project
-        </Button>
-
-        {loading && <CircularProgress size={20} />}
-      </Stack>
+      <TextField
+        placeholder="Tìm theo tên hoặc mô tả…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        sx={{ width: { xs: "100%", sm: 340 }, mb: 3 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="disabled" />
+              </InputAdornment>
+            ),
+            endAdornment: search && (
+              <InputAdornment position="end">
+                <IconButton size="small" aria-label="Xoá tìm kiếm" onClick={() => setSearch("")}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
 
       <ProjectFormDialog
         open={formDialogOpen}
@@ -121,8 +143,44 @@ export default function ProjectsPage() {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      {!error && (
-        <Box sx={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.15s" }}>
+      {!error && loading && (
+        <Grid container spacing={2}>
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+              <ProjectCardSkeleton />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {!error && isEmpty && debouncedSearch && (
+        <EmptyState
+          icon={<SearchOffIcon />}
+          title="Không tìm thấy project nào"
+          description={`Không có project nào khớp với "${debouncedSearch}". Thử từ khoá ngắn hơn hoặc kiểm tra lại chính tả.`}
+          action={
+            <Button variant="outlined" onClick={() => setSearch("")}>
+              Xoá tìm kiếm
+            </Button>
+          }
+        />
+      )}
+
+      {!error && isEmpty && !debouncedSearch && (
+        <EmptyState
+          icon={<FolderOpenIcon />}
+          title="Chưa có project nào"
+          description="Tạo project đầu tiên để bắt đầu quản lý công việc của nhóm."
+          action={
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateProject}>
+              Tạo project
+            </Button>
+          }
+        />
+      )}
+
+      {!error && !loading && projects.length > 0 && (
+        <>
           <Grid container spacing={2}>
             {projects.map((project) => (
               <Grid key={project.id} size={{ xs: 12, sm: 6, md: 4 }}>
@@ -131,15 +189,12 @@ export default function ProjectsPage() {
             ))}
           </Grid>
 
-          <Stack alignItems="center" sx={{ mt: 3 }}>
-            <Pagination
-              count={pageCount}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-              disabled={loading}
-            />
-          </Stack>
-        </Box>
+          {pageCount > 1 && (
+            <Stack sx={{ alignItems: "center", mt: 4 }}>
+              <Pagination count={pageCount} page={page} onChange={(_, value) => setPage(value)} />
+            </Stack>
+          )}
+        </>
       )}
     </>
   );
