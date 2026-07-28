@@ -3,9 +3,9 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
+import PasswordField from "../PasswordField.jsx";
 import { changePassword } from "../../api/auth.js";
 import { useNotification } from "../../notifications/NotificationContext.jsx";
 
@@ -62,33 +62,27 @@ export default function ChangePasswordSection() {
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack spacing={2}>
-          <TextField
+          <PasswordField
             label="Mật khẩu hiện tại"
-            type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             fullWidth
-            size="small"
             error={!!fieldErrors.old_password}
             helperText={fieldErrors.old_password?.[0]}
           />
-          <TextField
+          <PasswordField
             label="Mật khẩu mới"
-            type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             fullWidth
-            size="small"
             error={!!fieldErrors.new_password}
             helperText={fieldErrors.new_password?.[0]}
           />
-          <TextField
+          <PasswordField
             label="Nhập lại mật khẩu mới"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             fullWidth
-            size="small"
             error={!!fieldErrors.confirm_password}
             helperText={fieldErrors.confirm_password?.[0]}
           />

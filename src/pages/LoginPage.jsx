@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import PasswordField from '../components/PasswordField.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { Link as RouterLink } from 'react-router-dom'
 import Link from '@mui/material/Link'
@@ -75,10 +76,8 @@ export default function LoginPage() {
             error={Boolean(fieldErrors.username)}
             helperText={fieldErrors.username?.[0]}
           />
-          <TextField
-            size="small"
+          <PasswordField
             label="Password"
-            type="password"
             fullWidth
             margin="normal"
             value={password}

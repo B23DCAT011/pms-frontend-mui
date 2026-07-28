@@ -9,6 +9,7 @@ import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { register, verifyOtp, resendOtp } from '../api/auth.js'
 import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
+import PasswordField from '../components/PasswordField.jsx'
 import logo from '../assets/kiai-logo.png'
 
 export default function RegisterPage() {
@@ -156,9 +157,9 @@ export default function RegisterPage() {
             <TextField size="small" label="Họ" fullWidth margin="normal" value={form.last_name} onChange={updateField('last_name')}
               error={Boolean(fieldErrors.last_name)} helperText={fieldErrors.last_name?.[0]} />
           </Box>
-          <TextField size="small" label="Mật khẩu" type="password" fullWidth margin="normal" value={form.password} onChange={updateField('password')}
+          <PasswordField label="Mật khẩu" fullWidth margin="normal" value={form.password} onChange={updateField('password')}
             error={Boolean(fieldErrors.password)} helperText={fieldErrors.password?.[0]} />
-          <TextField size="small" label="Nhập lại mật khẩu" type="password" fullWidth margin="normal" value={form.password_confirm} onChange={updateField('password_confirm')}
+          <PasswordField label="Nhập lại mật khẩu" fullWidth margin="normal" value={form.password_confirm} onChange={updateField('password_confirm')}
             error={Boolean(fieldErrors.password_confirm)} helperText={fieldErrors.password_confirm?.[0]} />
           <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
           <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting || (turnstileEnabled && !captchaToken)}>

@@ -9,6 +9,7 @@ import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { forgotPassword, resetPassword } from '../api/auth.js'
 import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
+import PasswordField from '../components/PasswordField.jsx'
 import logo from '../assets/kiai-logo.png'
 
 export default function ForgotPasswordPage() {
@@ -104,11 +105,9 @@ export default function ForgotPasswordPage() {
               value={otp}
               onChange={(event) => setOtp(event.target.value)}
             />
-            <TextField
-              autoComplete='new-password'
-              size="small"
+            <PasswordField
+              autoComplete="new-password"
               label="Mật khẩu mới"
-              type="password"
               fullWidth
               margin="normal"
               value={newPassword}
