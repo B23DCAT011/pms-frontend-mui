@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
-import Chip from "@mui/material/Chip";
 import Alert from "@mui/material/Alert";
 import Grid from "@mui/material/Grid";
 import { useAuth } from "../../auth/AuthContext.jsx";
@@ -66,7 +65,6 @@ export default function ProfileSection() {
           <Typography variant="subtitle1" fontWeight={600}>
             {fullName}
           </Typography>
-          <Chip label={user.role} size="small" sx={{ textTransform: "capitalize", mt: 0.5 }} />
         </Box>
       </Box>
 

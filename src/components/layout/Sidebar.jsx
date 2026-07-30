@@ -92,8 +92,8 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
             <Typography variant="body2" fontWeight={600} noWrap>
               {fullName}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-              {user?.role}
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {user?.email}
             </Typography>
           </Box>
         </Box>
