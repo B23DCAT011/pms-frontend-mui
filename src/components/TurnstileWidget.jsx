@@ -48,6 +48,9 @@ const TurnstileWidget = forwardRef(function TurnstileWidget({ onVerify }, ref) {
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
           theme: 'auto',
+          // 'flexible' cho widget giãn hết bề ngang container (tối thiểu 300px) thay vì
+          // khoá cứng 300px như 'normal' -> khớp chiều rộng với TextField fullWidth.
+          size: 'flexible',
           callback: (token) => onVerify(token),
           'expired-callback': () => onVerify(''),
           'error-callback': () => onVerify(''),
@@ -66,11 +69,7 @@ const TurnstileWidget = forwardRef(function TurnstileWidget({ onVerify }, ref) {
 
   if (!turnstileEnabled) return null
 
-  return (
-    <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-      <div ref={containerRef} />
-    </div>
-  )
+  return <div ref={containerRef} style={{ marginTop: 16 }} />
 })
 
 export default TurnstileWidget
