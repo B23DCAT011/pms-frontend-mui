@@ -18,7 +18,11 @@ import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useThemeMode } from '../../theme/ThemeModeContext.jsx'
-import { listNotifications, markNotificationRead } from '../../api/notifications.js'
+import {
+  getUnreadNotificationCount,
+  listNotifications,
+  markNotificationRead,
+} from '../../api/notifications.js'
 import { notificationLabel, notificationTarget } from '../notifications/notificationDisplay.js'
 import { DRAWER_WIDTH } from './Sidebar.jsx'
 
@@ -43,6 +47,7 @@ export default function Topbar({ onOpenMenu }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const [anchorEl, setAnchorEl] = useState(null)
 
   const name = user.first_name || user.username
@@ -50,8 +55,13 @@ export default function Topbar({ onOpenMenu }) {
 
   useEffect(() => {
     const fetchNotifications = () => {
+      // Hai lời gọi tách nhau: danh sách chỉ để vẽ 5 dòng xem trước, còn số trên badge phải
+      // lấy từ endpoint đếm — đếm trong danh sách sẽ sai vì nó chỉ có 20 cái mới nhất.
       listNotifications()
         .then((data) => setNotifications(data.results))
+        .catch(() => {})
+      getUnreadNotificationCount()
+        .then((data) => setUnreadCount(data.unread_count))
         .catch(() => {})
     }
     fetchNotifications()
@@ -59,12 +69,13 @@ export default function Topbar({ onOpenMenu }) {
     return () => clearInterval(timer)
   }, [])
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length
-
   const handleNotificationClick = (notification) => {
     setAnchorEl(null)
     markNotificationRead(notification.id).catch(() => {})
     setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)))
+    // Trừ ngay thay vì chờ vòng polling kế tiếp (tối đa 30s). Math.max chặn số âm nếu người
+    // dùng bấm đúng lúc vòng polling vừa ghi đè giá trị cũ hơn vào state.
+    if (!notification.is_read) setUnreadCount((prev) => Math.max(0, prev - 1))
 
     const target = notificationTarget(notification)
     if (target) navigate(target)
