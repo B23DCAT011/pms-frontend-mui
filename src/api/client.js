@@ -16,7 +16,7 @@ apiClient.interceptors.request.use((config) => {
 
 let refreshPromise = null
 
-function refreshAccessToken() {
+function requestNewTokens() {
   const refresh = localStorage.getItem("refresh")
   if (!refresh) {
     return Promise.reject(new Error("No refresh token"))
@@ -27,6 +27,34 @@ function refreshAccessToken() {
     localStorage.setItem("access", access)
     localStorage.setItem("refresh", newRefresh)
     return access
+  })
+}
+
+// Backend bật ROTATE_REFRESH_TOKENS + BLACKLIST_AFTER_ROTATION nên refresh token là
+// DÙNG-MỘT-LẦN: xoay vòng xong là token cũ bị vô hiệu vĩnh viễn.
+//
+// localStorage dùng chung giữa các tab, nhưng biến JS thì mỗi tab một bản riêng — nên
+// `refreshPromise` bên dưới chỉ gộp được request TRONG CÙNG một tab. Các tab dùng chung một
+// access token nên hết hạn cùng lúc, và tab nào cũng tự phát request mỗi 30s (polling thông
+// báo) → nhiều tab cùng gửi đúng một refresh token đi. Tab đầu thắng, tab sau nhận 401 vì
+// token vừa bị blacklist, rồi xoá sạch localStorage — kéo theo cả tab thắng cũng văng ra,
+// dù phiên đăng nhập vẫn còn hiệu lực.
+//
+// navigator.locks là khoá dùng chung giữa mọi tab cùng origin: chỉ tab giữ khoá mới gọi
+// mạng; tab chờ xong thấy refresh token đã khác lúc đầu thì biết tab kia vừa làm hộ rồi,
+// dùng luôn access token mới thay vì gọi refresh lần hai (chắc chắn hỏng).
+function refreshAccessToken() {
+  // Web Locks cần secure context; localhost và https đều có. Không có thì giữ hành vi cũ.
+  if (!navigator.locks) {
+    return requestNewTokens()
+  }
+  const before = localStorage.getItem("refresh")
+  return navigator.locks.request("pms-token-refresh", () => {
+    const current = localStorage.getItem("refresh")
+    if (current && current !== before) {
+      return localStorage.getItem("access")
+    }
+    return requestNewTokens()
   })
 }
 
