@@ -39,7 +39,10 @@ export default function MyTasksPage() {
   const [projectFilter, setProjectFilter] = useState("");
   const [priority, setPriority] = useState("");
   const [category, setCategory] = useState("");
-  const [ordering, setOrdering] = useState("-created_at");
+  // Mặc định gần hạn nhất: trong từng nhóm, câu hỏi người dùng đang hỏi là "làm gì trước".
+  // -created_at làm tiêu chí phụ để task chưa có deadline vẫn ra thứ tự ổn định giữa các lần tải
+  // (nếu chỉ sort theo deadline thì cả nhóm "Không deadline" đều NULL -> thứ tự tuỳ DB).
+  const [ordering, setOrdering] = useState("deadline,-created_at");
 
   useEffect(() => {
     listAllMyProjects().then((projects) => {
@@ -97,9 +100,9 @@ export default function MyTasksPage() {
       else if (deadline < endOfToday) buckets.today.push(task);
       else buckets.upcoming.push(task);
     }
-    for (const key of ["overdue", "today", "upcoming"]) {
-      buckets[key].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-    }
+    // KHÔNG sort lại ở đây: thứ tự trong từng nhóm là thứ tự server trả về theo ?ordering=.
+    // Trước đây có vòng sort cứng theo deadline, khiến ô "Sắp xếp" đổi kiểu nào cũng không
+    // thấy khác gì (3/4 nhóm bị ghi đè thứ tự).
     return buckets;
   }, [tasks]);
 
@@ -149,6 +152,7 @@ export default function MyTasksPage() {
         <FormControl size="small" sx={{ width: 160 }}>
           <InputLabel>Sắp xếp</InputLabel>
           <Select label="Sắp xếp" value={ordering} onChange={(e) => setOrdering(e.target.value)}>
+            <MenuItem value="deadline,-created_at">Gần hạn nhất</MenuItem>
             <MenuItem value="-created_at">Mới nhất</MenuItem>
             <MenuItem value="created_at">Cũ nhất</MenuItem>
           </Select>
