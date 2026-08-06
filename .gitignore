@@ -11,7 +11,13 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Giá trị thật (địa chỉ API, site key Turnstile) gắn với hạ tầng và tài khoản Cloudflare
+# riêng của từng người triển khai -> không lên repo. CI lấy từ GitHub Variables, người mới
+# clone thì copy .env.example ra rồi tự điền.
 .env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*

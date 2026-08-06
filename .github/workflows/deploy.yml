@@ -24,7 +24,17 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+        # .env.production không nằm trong repo (giá trị gắn với hạ tầng riêng của người
+        # triển khai). Vite đọc được biến VITE_* từ môi trường process, và biến môi trường
+        # còn thắng file .env nếu có — nên tiêm ở đây là đủ, không cần tạo file.
+        # Dùng `vars` chứ không phải `secrets`: 2 giá trị này công khai (chúng nằm sẵn
+        # trong bundle JS gửi cho trình duyệt), đánh dấu là secret sẽ gây hiểu nhầm.
+        # PHẢI khai 2 biến này ở Settings > Secrets and variables > Actions > Variables,
+        # không thì build ra bundle trỏ vào API rỗng và CAPTCHA tự tắt.
       - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
