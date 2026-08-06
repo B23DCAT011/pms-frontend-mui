@@ -7,6 +7,7 @@ import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { register, verifyOtp, resendOtp } from '../api/auth.js'
+import { firstErrorMessage } from '../api/client.js'
 import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import AuthLayout from '../components/layout/AuthLayout.jsx'
@@ -70,7 +71,7 @@ export default function RegisterPage() {
       await verifyOtp(form.email, otp, invitationId)
       navigate('/login')
     } catch (err) {
-      setOtpError(err.errors?.non_field_errors?.[0] || err.message || 'Xác thực thất bại')
+      setOtpError(firstErrorMessage(err, 'Xác thực thất bại'))
     } finally {
       setSubmitting(false)
     }
@@ -91,7 +92,7 @@ export default function RegisterPage() {
         })
       }, 1000)
     } catch (err) {
-      setOtpError(err.errors?.non_field_errors?.[0] || err.message || 'Gửi lại OTP thất bại')
+      setOtpError(firstErrorMessage(err, 'Gửi lại OTP thất bại'))
     }
   }
 

@@ -7,6 +7,7 @@ import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { forgotPassword, resetPassword } from '../api/auth.js'
+import { firstErrorMessage } from '../api/client.js'
 import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import AuthLayout from '../components/layout/AuthLayout.jsx'
@@ -37,7 +38,7 @@ export default function ForgotPasswordPage() {
       setCaptchaToken('')
       setStep('reset')
     } catch (err) {
-      setEmailError(err.errors?.captcha_token?.[0] || err.message || 'Gửi yêu cầu thất bại')
+      setEmailError(firstErrorMessage(err, 'Gửi yêu cầu thất bại'))
       captchaRef.current?.reset()
     } finally {
       setSubmitting(false)
@@ -52,7 +53,7 @@ export default function ForgotPasswordPage() {
       await resetPassword(email, otp, newPassword)
       navigate('/login')
     } catch (err) {
-      setResetError(err.errors?.non_field_errors?.[0] || err.message || 'Đặt lại mật khẩu thất bại')
+      setResetError(firstErrorMessage(err, 'Đặt lại mật khẩu thất bại'))
     } finally {
       setSubmitting(false)
     }
@@ -73,7 +74,7 @@ export default function ForgotPasswordPage() {
         })
       }, 1000)
     } catch (err) {
-      setResetError(err.errors?.captcha_token?.[0] || err.message || 'Gửi lại OTP thất bại')
+      setResetError(firstErrorMessage(err, 'Gửi lại OTP thất bại'))
     } finally {
       captchaRef.current?.reset()
     }

@@ -95,4 +95,21 @@ apiClient.interceptors.response.use(
   },
 )
 
+// Lấy 1 câu để hiện cho người dùng, dùng cho chỗ chỉ có 1 dòng thông báo (không phải
+// helperText của từng ô). Cần vì `errors` có HAI hình dạng tuỳ cách backend ném lỗi:
+//   raise ValidationError("chuỗi trần")      -> mảng   ["OTP không đúng hoặc đã hết hạn."]
+//   validator của serializer / dict tường minh -> dict {"new_password": ["This password…"]}
+// Và `message` của mọi lỗi validate đều là chuỗi kỹ thuật "Validation error" — đọc thẳng
+// nó ra màn hình là thứ người dùng từng thấy thay cho câu tiếng Việt thật.
+export function firstErrorMessage(err, fallback) {
+  const errors = err?.errors
+  if (Array.isArray(errors) && errors.length) return String(errors[0])
+  if (errors && typeof errors === "object") {
+    const first = Object.values(errors).find((v) => (Array.isArray(v) ? v.length : v))
+    if (first) return String(Array.isArray(first) ? first[0] : first)
+  }
+  if (err?.message && err.message !== "Validation error") return err.message
+  return fallback
+}
+
 export default apiClient
