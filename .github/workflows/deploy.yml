@@ -1,21 +1,16 @@
-name: Deploy to GitHub Pages
+name: Deploy to EC2
 
 on:
   push:
     branches: [master]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
+  group: deploy-ec2
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,27 +19,31 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-        # .env.production không nằm trong repo (giá trị gắn với hạ tầng riêng của người
-        # triển khai). Vite đọc được biến VITE_* từ môi trường process, và biến môi trường
-        # còn thắng file .env nếu có — nên tiêm ở đây là đủ, không cần tạo file.
-        # Dùng `vars` chứ không phải `secrets`: 2 giá trị này công khai (chúng nằm sẵn
-        # trong bundle JS gửi cho trình duyệt), đánh dấu là secret sẽ gây hiểu nhầm.
-        # PHẢI khai 2 biến này ở Settings > Secrets and variables > Actions > Variables,
-        # không thì build ra bundle trỏ vào API rỗng và CAPTCHA tự tắt.
+        # .env.production bị gitignore (.gitignore dòng 19) nên phải tiêm qua môi trường.
+        # Vite đọc biến VITE_* từ process, và biến môi trường thắng file .env nếu có.
+        # Dùng `vars` chứ không phải `secrets`: cả 2 giá trị đều nằm sẵn trong bundle JS
+        # gửi cho trình duyệt, đánh dấu secret sẽ gây hiểu nhầm là chúng được giữ kín.
+        # Khai ở Settings > Secrets and variables > Actions > Variables.
       - run: npm run build
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Nạp SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ vars.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      # --delete dọn bundle của các lần build trước: tên file có hash nên không ghi đè lẫn
+      # nhau, không xoá thì thư mục phình mãi. An toàn vì index.html để no-store, trình duyệt
+      # không giữ bản cũ trỏ vào hash vừa bị xoá.
+      # Dấu / cuối "dist/" là bắt buộc: có nó thì rsync đồng bộ NỘI DUNG thư mục, thiếu nó
+      # thì nó tạo ra ~/frontend-dist/dist/.
+      - name: Đẩy lên EC2
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            dist/ ubuntu@${{ vars.EC2_HOST }}:~/frontend-dist/
