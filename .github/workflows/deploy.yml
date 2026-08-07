@@ -29,13 +29,28 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
 
+      # Truyền qua env thay vì nội suy ${{ }} thẳng vào script: khoá riêng có xuống dòng và
+      # ký tự đặc biệt, nhúng thẳng vào bash dễ vỡ cú pháp. Mỗi điều kiện hỏng có thông báo
+      # riêng — gộp chung thì lỗi chỉ hiện "exit code 1" không rõ vì sao.
       - name: Nạp SSH key
+        env:
+          EC2_HOST: ${{ vars.EC2_HOST }}
+          SSH_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          test -n "$EC2_HOST" || { echo "::error::Chưa khai biến EC2_HOST (Settings > Variables)"; exit 1; }
+          test -n "$SSH_KEY"  || { echo "::error::Chưa khai secret EC2_SSH_PRIVATE_KEY"; exit 1; }
+
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ vars.EC2_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null \
+            || { echo "::error::Khoá riêng sai định dạng — dán thiếu dòng BEGIN/END?"; exit 1; }
+
+          nc -z -w 10 "$EC2_HOST" 22 \
+            || { echo "::error::Không mở được cổng 22 tới $EC2_HOST — kiểm tra Security Group của EC2"; exit 1; }
+
+          # -T 20: mặc định chỉ 5s, quá ngắn khi runner ở xa Sydney.
+          ssh-keyscan -T 20 -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
       # --delete dọn bundle của các lần build trước: tên file có hash nên không ghi đè lẫn
       # nhau, không xoá thì thư mục phình mãi. An toàn vì index.html để no-store, trình duyệt
