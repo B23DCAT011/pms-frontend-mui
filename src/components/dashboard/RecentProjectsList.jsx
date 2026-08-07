@@ -5,7 +5,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 export const DASHBOARD_PANEL_HEIGHT = 420;
 
@@ -33,7 +33,13 @@ export default function RecentProjectsList({ projects }) {
       ) : (
         <List disablePadding dense sx={{ overflowY: "auto", flex: 1 }}>
           {projects.map((project) => (
-            <ListItemButton key={project.id} divider onClick={() => navigate(`/projects/${project.id}`)} sx={{ px: 1 }}>
+            <ListItemButton
+              key={project.id}
+              divider
+              component={RouterLink}
+              to={`/projects/${project.id}`}
+              sx={{ px: 1, color: "inherit" }}
+            >
               <ListItemText primary={project.name} slotProps={{ primary: { noWrap: true } }} />
             </ListItemButton>
           ))}

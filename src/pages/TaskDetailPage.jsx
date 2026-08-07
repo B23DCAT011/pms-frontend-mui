@@ -258,8 +258,17 @@ export default function TaskDetailPage() {
             <Paper
               key={subtask.id}
               variant="outlined"
-              sx={{ p: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-              onClick={() => navigate(`/projects/${projectId}/tasks/${subtask.id}`)}
+              component={RouterLink}
+              to={`/projects/${projectId}/tasks/${subtask.id}`}
+              sx={{
+                p: 1.5,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                cursor: "pointer",
+                textDecoration: "none",
+                color: "inherit",
+              }}
             >
               <Typography variant="body2">{subtask.title}</Typography>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>

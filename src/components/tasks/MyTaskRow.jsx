@@ -5,22 +5,26 @@ import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { alpha } from "@mui/material/styles";
+import { Link as RouterLink } from "react-router-dom";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../../constants/taskPriority.js";
 
 const CATEGORY_LABEL = { todo: "To Do", in_progress: "Đang làm", done: "Hoàn thành" };
 const CATEGORY_CHIP_COLOR = { todo: "default", in_progress: "info", done: "success" };
 const CATEGORY_BORDER_COLOR = { todo: "grey.400", in_progress: "info.main", done: "success.main" };
 
-export default function MyTaskRow({ task, projectName, overdue, onClick }) {
+export default function MyTaskRow({ task, projectName, overdue, to }) {
   return (
     <Paper
       variant="outlined"
-      onClick={onClick}
+      component={RouterLink}
+      to={to}
       sx={{
         p: 1.5,
         display: "flex",
         alignItems: "center",
         gap: 1.5,
+        textDecoration: "none",
+        color: "inherit",
         cursor: "pointer",
         borderLeft: 3,
         borderLeftColor: overdue ? "error.main" : CATEGORY_BORDER_COLOR[task.status.category],

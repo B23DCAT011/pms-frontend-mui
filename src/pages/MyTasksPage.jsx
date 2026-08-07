@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -27,7 +26,6 @@ const GROUPS = [
 export default function MyTasksPage() {
   useDocumentTitle("My Tasks");
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [projectsById, setProjectsById] = useState({});
   const [tasks, setTasks] = useState([]);
@@ -106,7 +104,7 @@ export default function MyTasksPage() {
     return buckets;
   }, [tasks]);
 
-  const goToTask = (task) => navigate(`/projects/${task.project}/tasks/${task.id}`);
+  const taskTo = (task) => `/projects/${task.project}/tasks/${task.id}`;
 
   return (
     <>
@@ -182,7 +180,7 @@ export default function MyTasksPage() {
                         task={task}
                         projectName={projectsById[task.project] || "..."}
                         overdue={key === "overdue"}
-                        onClick={() => goToTask(task)}
+                        to={taskTo(task)}
                       />
                     ))}
                   </Stack>

@@ -6,13 +6,13 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Chip from "@mui/material/Chip";
 import { alpha } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../../constants/taskPriority.js";
 import { DASHBOARD_PANEL_HEIGHT } from "./RecentProjectsList.jsx";
 
-function TaskRow({ task, overdue, onClick }) {
+function TaskRow({ task, overdue, to }) {
   return (
-    <ListItemButton divider onClick={onClick} sx={{ px: 1 }}>
+    <ListItemButton divider component={RouterLink} to={to} sx={{ px: 1, color: "inherit" }}>
       <ListItemText
         primary={task.title}
         secondary={new Date(task.deadline).toLocaleDateString("vi-VN")}
@@ -32,8 +32,7 @@ function TaskRow({ task, overdue, onClick }) {
 }
 
 export default function UpcomingTasksList({ overdueTasks, upcomingTasks }) {
-  const navigate = useNavigate();
-  const goToTask = (task) => navigate(`/projects/${task.project}/tasks/${task.id}`);
+  const taskTo = (task) => `/projects/${task.project}/tasks/${task.id}`;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, height: DASHBOARD_PANEL_HEIGHT, display: "flex", flexDirection: "column" }}>
@@ -52,7 +51,7 @@ export default function UpcomingTasksList({ overdueTasks, upcomingTasks }) {
               </Typography>
               <List disablePadding dense>
                 {overdueTasks.map((task) => (
-                  <TaskRow key={task.id} task={task} overdue onClick={() => goToTask(task)} />
+                  <TaskRow key={task.id} task={task} overdue to={taskTo(task)} />
                 ))}
               </List>
             </>
@@ -69,7 +68,7 @@ export default function UpcomingTasksList({ overdueTasks, upcomingTasks }) {
               </Typography>
               <List disablePadding dense>
                 {upcomingTasks.map((task) => (
-                  <TaskRow key={task.id} task={task} onClick={() => goToTask(task)} />
+                  <TaskRow key={task.id} task={task} to={taskTo(task)} />
                 ))}
               </List>
             </>

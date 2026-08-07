@@ -19,7 +19,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import FolderIcon from "@mui/icons-material/Folder";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import { alpha } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.jsx";
 import { colorFromString } from "../../utils/colorFromString.js";
 
@@ -37,7 +37,6 @@ function memberName(m) {
 }
 
 export default function ProjectCard({ project, onEdit, onDelete }) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const isOwner = project.created_by_email === user.email;
@@ -91,7 +90,7 @@ export default function ProjectCard({ project, onEdit, onDelete }) {
         </>
       )}
 
-      <CardActionArea onClick={() => navigate(`/projects/${project.id}`)}>
+      <CardActionArea component={RouterLink} to={`/projects/${project.id}`} sx={{ color: "inherit" }}>
         <CardContent>
           <Box
             sx={{

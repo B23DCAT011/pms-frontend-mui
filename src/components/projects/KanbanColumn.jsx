@@ -21,7 +21,7 @@ export default function KanbanColumn({
   onDropTask,
   canEdit,
   onAddTask,
-  onOpenTask,
+  taskTo,
   onEditStatus,
   onDeleteStatus,
 }) {
@@ -104,9 +104,10 @@ export default function KanbanColumn({
           </Menu>
         </Stack>
       </Box>
-      <Stack spacing={2} sx={{ overflowY: "auto", minHeight: 200, pr: 0.5 }}>
+      {/* p (thay cho pr) chừa chỗ cho card nhô lên 2px + đổ bóng khi hover, nếu không overflowY cắt mất */}
+      <Stack spacing={2} sx={{ overflowY: "auto", minHeight: 200, p: 0.5, pb: 1 }}>
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onClick={() => onOpenTask(task)} />
+          <TaskCard key={task.id} task={task} to={taskTo(task)} />
         ))}
         {tasks.length === 0 && (
           <Box sx={{ textAlign: "center", py: 3, color: "text.disabled" }}>

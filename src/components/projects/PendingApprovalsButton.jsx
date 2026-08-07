@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import Button from "@mui/material/Button";
 import Drawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -17,7 +17,6 @@ import { useNotification } from "../../notifications/NotificationContext.jsx";
 // của đúng project này, duyệt/từ chối ngay tại chỗ — không cần vào từng task detail.
 // Drawer không keepMounted -> mỗi lần mở lại tự remount, tự fetch lại danh sách mới nhất.
 export default function PendingApprovalsButton({ projectId, onChanged }) {
-  const navigate = useNavigate();
   const { notifySuccess, notifyError } = useNotification();
   const [open, setOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -83,11 +82,10 @@ export default function PendingApprovalsButton({ projectId, onChanged }) {
                   <Paper
                     key={task.id}
                     variant="outlined"
-                    sx={{ p: 1.5, cursor: "pointer" }}
-                    onClick={() => {
-                      setOpen(false);
-                      navigate(`/projects/${projectId}/tasks/${task.id}`);
-                    }}
+                    component={RouterLink}
+                    to={`/projects/${projectId}/tasks/${task.id}`}
+                    sx={{ p: 1.5, display: "block", cursor: "pointer", textDecoration: "none", color: "inherit" }}
+                    onClick={() => setOpen(false)}
                   >
                     <Typography variant="subtitle2" fontWeight={600} noWrap>
                       {task.title}
@@ -95,8 +93,17 @@ export default function PendingApprovalsButton({ projectId, onChanged }) {
                     <Typography variant="caption" color="text.secondary">
                       Nộp bởi {assigneeName}
                     </Typography>
-                    {/* stopPropagation để bấm nút không kích hoạt luôn onClick điều hướng của Paper cha */}
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }} onClick={(e) => e.stopPropagation()}>
+                    {/* Paper cha là thẻ <a>: stopPropagation không chặn được điều hướng mặc định của
+                        trình duyệt khi bấm vào phần tử nằm trong link, phải preventDefault. */}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ mt: 1 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
                       <Button
                         size="small"
                         variant="contained"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
+import { useParams, Link as RouterLink } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -43,7 +43,6 @@ function fetchStatusCounts(projectId, statusList) {
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const confirm = useConfirm();
   const { notifySuccess, notifyError } = useNotification();
@@ -298,30 +297,52 @@ export default function ProjectDetailPage() {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          {isAdmin && <PendingApprovalsButton projectId={id} onChanged={reloadTasks} />}
-          <Stack direction="row" spacing={0.5} sx={{ border: 1, borderColor: "divider", borderRadius: "20px", p: 0.5 }}>
-            <Button
-              size="small"
-              variant={view === "kanban" ? "contained" : "text"}
-              color={view === "kanban" ? "primary" : "inherit"}
-              onClick={() => setView("kanban")}
-              startIcon={<ViewKanbanIcon fontSize="small" />}
-              sx={{ borderRadius: "16px" }}
+        <Stack spacing={1} sx={{ alignItems: "flex-end" }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            {isAdmin && <PendingApprovalsButton projectId={id} onChanged={reloadTasks} />}
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{ border: 1, borderColor: "divider", borderRadius: "20px", p: 0.5 }}
             >
-              Kanban
-            </Button>
+              <Button
+                size="small"
+                variant={view === "kanban" ? "contained" : "text"}
+                color={view === "kanban" ? "primary" : "inherit"}
+                onClick={() => setView("kanban")}
+                startIcon={<ViewKanbanIcon fontSize="small" />}
+                sx={{ borderRadius: "16px" }}
+              >
+                Kanban
+              </Button>
+              <Button
+                size="small"
+                variant={view === "list" ? "contained" : "text"}
+                color={view === "list" ? "primary" : "inherit"}
+                onClick={() => setView("list")}
+                startIcon={<ViewListIcon fontSize="small" />}
+                sx={{ borderRadius: "16px" }}
+              >
+                List
+              </Button>
+            </Stack>
             <Button
-              size="small"
-              variant={view === "list" ? "contained" : "text"}
-              color={view === "list" ? "primary" : "inherit"}
-              onClick={() => setView("list")}
-              startIcon={<ViewListIcon fontSize="small" />}
-              sx={{ borderRadius: "16px" }}
+              variant="contained"
+              startIcon={<AddIcon />}
+              disabled={!isAdmin || sortedStatuses.length === 0}
+              onClick={() => openCreateTask(null)}
             >
-              List
+              Tạo task
             </Button>
           </Stack>
+
+          <MembersPanel
+            members={project.members ?? []}
+            canEdit={isAdmin}
+            currentUserId={user.id}
+            onRemoveMember={handleRemoveMember}
+            onAddMember={() => setMemberDialogOpen(true)}
+          />
         </Stack>
       </Box>
 
@@ -383,7 +404,7 @@ export default function ProjectDetailPage() {
                     onDropTask={(taskId) => handleDropTask(status.id, taskId)}
                     canEdit={isAdmin}
                     onAddTask={() => openCreateTask(status.id)}
-                    onOpenTask={(task) => navigate(`/projects/${id}/tasks/${task.id}`)}
+                    taskTo={(task) => `/projects/${id}/tasks/${task.id}`}
                     onEditStatus={() => openEditStatus(status)}
                     onDeleteStatus={() => handleDeleteStatus(status)}
                   />
@@ -426,14 +447,6 @@ export default function ProjectDetailPage() {
             </Box>
           )}
         </Box>
-
-        <MembersPanel
-          members={project.members ?? []}
-          canEdit={isAdmin}
-          currentUserId={user.id}
-          onRemoveMember={handleRemoveMember}
-          onAddMember={() => setMemberDialogOpen(true)}
-        />
       </Stack>
 
       <ActivityLogButton scope="project" id={id} />

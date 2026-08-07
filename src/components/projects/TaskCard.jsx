@@ -8,13 +8,14 @@ import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import { alpha } from "@mui/material/styles";
+import { Link as RouterLink } from "react-router-dom";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "../../constants/taskPriority.js";
 import { colorFromString } from "../../utils/colorFromString.js";
 
-export default function TaskCard({ task, onClick }) {
+export default function TaskCard({ task, to }) {
   const [dragging, setDragging] = useState(false);
   const assignedTo = task.assigned_to;
   const assigneeName = assignedTo
@@ -25,14 +26,19 @@ export default function TaskCard({ task, onClick }) {
   return (
     <Card
       variant="outlined"
+      component={RouterLink}
+      to={to}
       draggable
       onDragStart={(e) => {
+        // Ghi đè payload mặc định của thẻ <a> (là URL) bằng id task, đúng thứ KanbanColumn đọc khi thả.
         e.dataTransfer.setData("text/plain", task.id);
         setDragging(true);
       }}
       onDragEnd={() => setDragging(false)}
-      onClick={onClick}
       sx={{
+        display: "block",
+        textDecoration: "none",
+        color: "inherit",
         cursor: "grab",
         opacity: dragging ? 0.4 : 1,
         transition: "border-color .15s, box-shadow .15s, transform .15s, opacity .15s",

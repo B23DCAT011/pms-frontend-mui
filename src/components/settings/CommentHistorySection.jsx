@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -15,7 +15,6 @@ import { listMyComments } from "../../api/comments.js";
 const PAGE_SIZE = 9;
 
 export default function CommentHistorySection() {
-  const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -45,7 +44,7 @@ export default function CommentHistorySection() {
 
   const pageCount = Math.max(1, Math.ceil(count / PAGE_SIZE));
 
-  const goToComment = (comment) => navigate(`/projects/${comment.project_id}/tasks/${comment.task}`);
+  const commentTo = (comment) => `/projects/${comment.project_id}/tasks/${comment.task}`;
 
   if (loading) return <CircularProgress size={24} />;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -60,8 +59,16 @@ export default function CommentHistorySection() {
             <Paper
               key={comment.id}
               variant="outlined"
-              onClick={() => goToComment(comment)}
-              sx={{ p: 2, cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
+              component={RouterLink}
+              to={commentTo(comment)}
+              sx={{
+                p: 2,
+                display: "block",
+                cursor: "pointer",
+                textDecoration: "none",
+                color: "inherit",
+                "&:hover": { bgcolor: "action.hover" },
+              }}
             >
               <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.75 }}>
                 <Chip label={comment.project_name} size="small" variant="outlined" />
