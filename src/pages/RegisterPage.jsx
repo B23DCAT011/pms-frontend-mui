@@ -12,10 +12,12 @@ import TurnstileWidget, { turnstileEnabled } from '../components/TurnstileWidget
 import PasswordField from '../components/PasswordField.jsx'
 import AuthLayout from '../components/layout/AuthLayout.jsx'
 import useDocumentTitle from '../hooks/useDocumentTitle.js'
+import { useAuth } from '../auth/AuthContext.jsx'
 
 export default function RegisterPage() {
   useDocumentTitle('Đăng ký')
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [searchParams] = useSearchParams()
   const invitationId = searchParams.get('invitation_id')
   const [step, setStep] = useState('form') // 'form' | 'otp'
@@ -69,12 +71,28 @@ export default function RegisterPage() {
     setSubmitting(true)
     try {
       await verifyOtp(form.email, otp, invitationId)
-      navigate('/login')
     } catch (err) {
       setOtpError(firstErrorMessage(err, 'Xác thực thất bại'))
-    } finally {
       setSubmitting(false)
+      return
     }
+
+    // Tài khoản đã kích hoạt xong. Login hỏng thì đưa về /login chứ không báo lỗi OTP:
+    // OTP vừa bị xoá sau khi verify nên nhập lại chỉ dẫn vào ngõ cụt.
+    try {
+      await login(form.username, form.password)
+      navigate('/')
+    } catch {
+      navigate('/login')
+    }
+  }
+
+  function handleBackToForm() {
+    setStep('form')
+    setOtp('')
+    setOtpError('')
+    // Token Turnstile đã bị tiêu ở lần đăng ký vừa rồi; widget mount lại sẽ cấp token mới.
+    setCaptchaToken('')
   }
 
   async function handleResend() {
@@ -121,6 +139,9 @@ export default function RegisterPage() {
 
         <Button fullWidth sx={{ mt: 1 }} onClick={handleResend} disabled={resendCooldown > 0}>
           {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
+        </Button>
+        <Button fullWidth color="inherit" sx={{ mt: 0.5 }} onClick={handleBackToForm} disabled={submitting}>
+          Quay lại sửa thông tin
         </Button>
       </AuthLayout>
     )

@@ -59,6 +59,15 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  function handleBackToEmail() {
+    setStep('email')
+    setOtp('')
+    setNewPassword('')
+    setResetError('')
+    // Token Turnstile chỉ dùng được 1 lần; widget ở bước email là instance mới nên phải lấy token mới.
+    setCaptchaToken('')
+  }
+
   async function handleResend() {
     setResetError('')
     try {
@@ -119,6 +128,9 @@ export default function ForgotPasswordPage() {
           disabled={resendCooldown > 0 || (turnstileEnabled && !captchaToken)}
         >
           {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
+        </Button>
+        <Button fullWidth color="inherit" sx={{ mt: 0.5 }} onClick={handleBackToEmail} disabled={submitting}>
+          Nhập lại email khác
         </Button>
       </AuthLayout>
     )
